@@ -34,13 +34,7 @@ No account or database. Drafts, saved weeks, and codes stay in the browser.
 
 ## GitHub
 
-This project lives in Cursor until you create a GitHub repository.
-
-1. In the Cursor agent view, click **Create repo**.
-2. Confirm the GitHub account and repository name (for example `crgm-pay`).
-3. After the repo exists, the `main` branch here can be pushed to GitHub.
-
-Render needs a GitHub (or GitLab) repo it can access. Cursor’s Origin remote is not enough for Render.
+Source: [github.com/jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay) (`main`).
 
 ## Deploy on Render
 
@@ -48,10 +42,9 @@ CRGM Pay is a Next.js **Web Service** (not a static site). Render builds with `n
 
 ### Option A — Blueprint (uses `render.yaml`)
 
-1. Push this repo to GitHub (see above).
-2. Open [Render Blueprints](https://dashboard.render.com/blueprints) and connect the GitHub repo.
-3. Apply the Blueprint. It creates a web service named `crgm-pay` on Node 22.
-4. When the deploy is live, open the `*.onrender.com` URL.
+1. Open [Render Blueprints](https://dashboard.render.com/blueprints) and connect [jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay).
+2. Apply the Blueprint. It creates a web service named `crgm-pay` on Node 22.
+3. When the deploy is live, open the `*.onrender.com` URL.
 
 ### Option B — New Web Service
 
