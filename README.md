@@ -49,7 +49,7 @@ CRGM Pay is a Next.js **Web Service** (not a static site). Render builds with `n
 ### Option B — New Web Service
 
 1. In the [Render dashboard](https://dashboard.render.com/), **New → Web Service**.
-2. Connect the GitHub repo and select branch `main`.
+2. Connect [jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay) and select branch `main`.
 3. Use these settings:
 
 | Setting | Value |
