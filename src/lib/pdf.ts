@@ -84,15 +84,21 @@ async function captureElement(
     if (iframeDoc.fonts?.ready) {
       await iframeDoc.fonts.ready;
     }
-    const canvas = await html2canvas(iframeDoc.body, {
-      scale: 1.6,
+    const target =
+      (clone.querySelector(":scope > div") as HTMLElement | null) ?? clone;
+    const widthPx = target.offsetWidth || iframeDoc.body.scrollWidth;
+    const heightPx = target.offsetHeight || iframeDoc.body.scrollHeight;
+    const canvas = await html2canvas(target, {
+      scale: 2,
       backgroundColor: "#ffffff",
       useCORS: true,
       logging: false,
-      width: iframeDoc.body.scrollWidth,
-      height: iframeDoc.body.scrollHeight,
-      windowWidth: iframeDoc.body.scrollWidth,
-      windowHeight: iframeDoc.body.scrollHeight,
+      width: widthPx,
+      height: heightPx,
+      windowWidth: widthPx,
+      windowHeight: heightPx,
+      scrollX: 0,
+      scrollY: 0,
     });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
     const imageHeight = (canvas.height / canvas.width) * pageWidth;

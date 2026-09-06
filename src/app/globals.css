@@ -136,6 +136,13 @@
   width: 11in;
 }
 
+.print-page {
+  width: 11in;
+  height: 8.5in;
+  overflow: hidden;
+  background: #fff;
+}
+
 .print-page + .print-page {
   page-break-before: always;
   break-before: page;

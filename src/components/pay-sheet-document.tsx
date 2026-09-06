@@ -29,8 +29,9 @@ export function PaySheetDocument({
   pages,
   showWeeklyTotal = false,
 }: PaySheetDocumentProps) {
-  const lines = printedJobs(sheet.days[day], 20);
-  const total = pageTotal(sheet.days[day]);
+  const dayLines = sheet.days[day] ?? [];
+  const lines = printedJobs(dayLines, 20);
+  const total = pageTotal(dayLines);
   const week = showWeeklyTotal ? weeklyTotal(sheet) : 0;
 
   return (
@@ -118,12 +119,10 @@ export function PaySheetDocument({
             <td className={styles.pageTotalPad} colSpan={4} />
           </tr>
           <tr className={styles.rules}>
-            <td colSpan={9}>{POLICY_LINES[0]}</td>
-            <td colSpan={5} />
+            <td colSpan={14}>{POLICY_LINES[0]}</td>
           </tr>
           <tr className={styles.rules}>
-            <td colSpan={9}>{POLICY_LINES[1]}</td>
-            <td colSpan={5} />
+            <td colSpan={14}>{POLICY_LINES[1]}</td>
           </tr>
           <tr className={styles.rules}>
             <td colSpan={9}>{POLICY_LINES[2]}</td>

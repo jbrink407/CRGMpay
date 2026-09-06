@@ -5,10 +5,13 @@ import {
   applyWeekEnding,
   createBlankSheet,
   createSampleSheet,
+  ensureSheet,
   formatUSDate,
   lineAmount,
+  nextSaturday,
   pageTotal,
   pdfFilename,
+  saturdayOfWeek,
   weeklyTotal,
   weekdayDate,
 } from "./pay-sheet";
@@ -27,7 +30,8 @@ test("sample week uses installer names from the workbook", () => {
   assert.equal(pdfFilename(sheet), "INSTALLER Joseph Scott Kemper.pdf");
   assert.equal(pageTotal(sheet.days.monday), 58.85);
   assert.equal(pageTotal(sheet.days.thursday), 0);
-  assert.equal(weeklyTotal(sheet), 184.33);
+  assert.equal(pageTotal(sheet.days.saturday), 20.5);
+  assert.equal(weeklyTotal(sheet), 204.83);
 });
 
 test("piece line is qty times rate", () => {
@@ -47,9 +51,11 @@ test("piece line is qty times rate", () => {
   );
 });
 
-test("week ending Saturday maps Mon–Fri workdays", () => {
+test("week ending Saturday maps Sunday–Saturday", () => {
+  assert.equal(weekdayDate("2026-09-05", "sunday"), "2026-08-30");
   assert.equal(weekdayDate("2026-09-05", "monday"), "2026-08-31");
   assert.equal(weekdayDate("2026-09-05", "friday"), "2026-09-04");
+  assert.equal(weekdayDate("2026-09-05", "saturday"), "2026-09-05");
   assert.equal(formatUSDate("2026-09-05"), "9/5/2026");
 });
 
@@ -65,4 +71,24 @@ test("blank weekday rows use stable ids", () => {
   const second = createBlankSheet();
   assert.equal(first.days.monday[0].id, second.days.monday[0].id);
   assert.equal(first.days.monday[0].id, "monday-0");
+  assert.ok(first.days.sunday);
+  assert.ok(first.days.saturday);
+});
+
+test("older drafts without weekend days still load", () => {
+  const sheet = ensureSheet({
+    installerName: "Test",
+    helperName: "",
+    weekEnding: "2026-09-05",
+    days: {
+      monday: [],
+    } as never,
+  });
+  assert.equal(sheet.days.sunday[0].date, "2026-08-30");
+  assert.equal(sheet.days.saturday[0].date, "2026-09-05");
+});
+
+test("saturday of week and next saturday", () => {
+  assert.equal(saturdayOfWeek("2026-09-02"), "2026-09-05");
+  assert.equal(nextSaturday("2026-09-05"), "2026-09-12");
 });

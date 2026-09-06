@@ -2,17 +2,18 @@
 
 A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
 
-The printed page follows `data/CR Pay Sheet.xlsx`: one landscape log per weekday (Monday–Friday), piece-rate lines, labor-code lookup, page total, Friday weekly total, and the policy footer.
+The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, Saturday weekly total, and the policy footer. There is one page per day, Sunday through Saturday.
 
-Data entry stays in a normal form. Totals calculate as you type.
+Add lines as work happens. Each week is saved on this device, so Monday’s jobs are still there on Thursday.
 
 ## What it does
 
-- Installer and helper names, week ending
-- One page per weekday, up to 20 piece-work lines
+- Installer and helper names, week ending Saturday
+- One page per day (Sun–Sat), up to 20 piece-work lines
 - Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments, Mgr Apvl
-- Rate looks up from the Job Codes list when you pick a labor code (`qty × rate`)
-- **Download PDF** is a 5-page landscape letter packet (`INSTALLER {name}.pdf`)
+- Rate looks up from the Job Codes list (`qty × rate`)
+- **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`)
+- Weekend tabs remind you of Chuck / Stacy same-day text rules
 - Job codes and rates can be edited or replaced by pasting `CODE, RATE`
 
 ## Run locally
@@ -22,23 +23,24 @@ npm install
 npm run dev
 ```
 
-Open the printed URL from the terminal (this project uses port 43180).
+Open the URL from the terminal (this project uses port 43180).
 
 ```bash
 npm run build
 npm start
 ```
 
-No account or database. Drafts and codes stay in the browser.
+No account or database. Drafts, saved weeks, and codes stay in the browser.
 
 ## Filling a week
 
 1. Enter installer and helper.
-2. Set week ending (Saturday).
-3. Choose a weekday tab and add lines: customer, address, labor code, qty.
-4. Download PDF or print all five pages.
+2. Confirm week ending (Saturday). Changing it opens that week if you already started it.
+3. Choose a day tab and add lines: customer, address, labor code, qty.
+4. Close the laptop and come back later — the week is still there.
+5. Download PDF or print all seven pages when the week is done.
 
-**Load sample** fills Joseph Scott Kemper / Joshua Brinker with a few piece-rate lines.
+**New week** saves the current week and opens the next Saturday. **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
 
 ## Job codes
 

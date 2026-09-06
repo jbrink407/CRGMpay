@@ -13,10 +13,12 @@ import {
 import {
   WEEKDAYS,
   WEEKDAY_LABELS,
+  WEEKDAY_SHORT,
   applyCodeToLine,
-  applyWeekEnding,
   emptyJob,
   formatMoney,
+  formatUSDate,
+  isWeekend,
   lineAmount,
   pageTotal,
   parseNumber,
@@ -25,6 +27,7 @@ import {
   type PaySheet,
   type Weekday,
 } from "@/lib/pay-sheet";
+import { type WeekSummary } from "@/lib/storage";
 import { Plus, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -32,9 +35,12 @@ interface PaySheetFormProps {
   sheet: PaySheet;
   codes: PieceCode[];
   day: Weekday;
+  weeks: WeekSummary[];
   onDayChange: (day: Weekday) => void;
   onChange: (sheet: PaySheet) => void;
   onCodesChange: (codes: PieceCode[]) => void;
+  onWeekEndingChange: (weekEnding: string) => void;
+  onOpenWeek: (weekEnding: string) => void;
 }
 
 const selectClassName =
@@ -44,12 +50,15 @@ export function PaySheetForm({
   sheet,
   codes,
   day,
+  weeks,
   onDayChange,
   onChange,
   onCodesChange,
+  onWeekEndingChange,
+  onOpenWeek,
 }: PaySheetFormProps) {
   const [importText, setImportText] = useState("");
-  const lines = sheet.days[day];
+  const lines = sheet.days[day] ?? [];
 
   function patch(partial: Partial<PaySheet>) {
     onChange({ ...sheet, ...partial });
@@ -102,7 +111,8 @@ export function PaySheetForm({
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
         <h2 className="font-heading text-sm font-medium">Header</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Prints as INSTALLER / HELPER on the Payroll Detail Log.
+          Prints as INSTALLER / HELPER. Come back tomorrow — this week stays on
+          this device.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Field label="Installer">
@@ -121,16 +131,37 @@ export function PaySheetForm({
               placeholder="Joshua Brinker"
             />
           </Field>
-          <Field label="Week ending">
+          <Field label="Week ending (Saturday)">
             <Input
               type="date"
               value={sheet.weekEnding}
-              onChange={(event) =>
-                onChange(applyWeekEnding(sheet, event.target.value))
-              }
+              onChange={(event) => onWeekEndingChange(event.target.value)}
             />
           </Field>
         </div>
+        {weeks.length > 1 ? (
+          <div className="mt-4">
+            <p className="text-xs text-muted-foreground">Saved weeks</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {weeks.map((item) => (
+                <Button
+                  key={item.weekEnding}
+                  type="button"
+                  size="sm"
+                  variant={
+                    item.weekEnding === sheet.weekEnding ? "default" : "outline"
+                  }
+                  onClick={() => onOpenWeek(item.weekEnding)}
+                >
+                  {formatUSDate(item.weekEnding)}
+                  <span className="tabular-nums opacity-70">
+                    {formatMoney(item.total)}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
@@ -138,8 +169,8 @@ export function PaySheetForm({
           <div>
             <h2 className="font-heading text-sm font-medium">Piece work</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              One log page per weekday, 20 lines each. Pick a labor code and
-              enter qty — PC pay rate looks up from Job Codes.
+              One page per day, including Saturday and Sunday. Fill a few lines
+              now and the rest later — nothing is lost when you close the tab.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -165,15 +196,28 @@ export function PaySheetForm({
               type="button"
               size="sm"
               variant={day === item ? "default" : "outline"}
+              className={
+                isWeekend(item) && day !== item
+                  ? "border-amber-700/40"
+                  : undefined
+              }
               onClick={() => onDayChange(item)}
             >
-              {WEEKDAY_LABELS[item]}
+              <span className="sm:hidden">{WEEKDAY_SHORT[item]}</span>
+              <span className="hidden sm:inline">{WEEKDAY_LABELS[item]}</span>
               <span className="tabular-nums opacity-70">
-                {formatMoney(pageTotal(sheet.days[item]))}
+                {formatMoney(pageTotal(sheet.days[item] ?? []))}
               </span>
             </Button>
           ))}
         </div>
+        {isWeekend(day) ? (
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 ring-1 ring-amber-700/20">
+            Weekend work must be pre-approved by Charles Wiggins. Text the pay
+            sheet and punch corrections to Chuck (404-449-2378) and Stacy
+            (404-379-7870) the same day.
+          </p>
+        ) : null}
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[1100px] border-collapse text-sm">

@@ -5,22 +5,53 @@ import {
 } from "./job-codes";
 
 export const WEEKDAYS = [
+  "sunday",
   "monday",
   "tuesday",
   "wednesday",
   "thursday",
   "friday",
+  "saturday",
 ] as const;
 
 export type Weekday = (typeof WEEKDAYS)[number];
 
 export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  sunday: "Sunday",
   monday: "Monday",
   tuesday: "Tuesday",
   wednesday: "Wednesday",
   thursday: "Thursday",
   friday: "Friday",
+  saturday: "Saturday",
 };
+
+export const WEEKDAY_SHORT: Record<Weekday, string> = {
+  sunday: "Sun",
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+};
+
+/** Sun–Sat payroll week; Saturday is week ending. */
+const WEEKDAY_OFFSET: Record<Weekday, number> = {
+  sunday: 6,
+  monday: 5,
+  tuesday: 4,
+  wednesday: 3,
+  thursday: 2,
+  friday: 1,
+  saturday: 0,
+};
+
+export const WEEKEND_DAYS: Weekday[] = ["sunday", "saturday"];
+
+export function isWeekend(day: Weekday): boolean {
+  return WEEKEND_DAYS.includes(day);
+}
 
 export const POLICY_LINES = [
   "LEAD NAME and HELPER NAME and DATE work performed are required on every work sheet",
@@ -107,15 +138,37 @@ export function lastSaturday(from = new Date()): string {
   return toISODate(date);
 }
 
-/** Week ending is Saturday; Mon–Fri are the five workdays before it. */
+export function nextSaturday(weekEnding: string): string {
+  const date = parseISODate(saturdayOfWeek(weekEnding));
+  if (!date) return lastSaturday();
+  date.setDate(date.getDate() + 7);
+  return toISODate(date);
+}
+
+/** Saturday on or after this date in the Sun–Sat payroll week. */
+export function saturdayOfWeek(iso: string): string {
+  const date = parseISODate(iso);
+  if (!date) return lastSaturday();
+  date.setDate(date.getDate() + ((6 - date.getDay() + 7) % 7));
+  return toISODate(date);
+}
+
+/** Week ending is Saturday; Sunday–Friday are the six days before it. */
 export function weekdayDate(weekEnding: string, day: Weekday): string {
   const end = parseISODate(weekEnding) ?? parseISODate(lastSaturday())!;
-  const offset = { monday: 5, tuesday: 4, wednesday: 3, thursday: 2, friday: 1 }[
-    day
-  ];
   const date = new Date(end);
-  date.setDate(end.getDate() - offset);
+  date.setDate(end.getDate() - WEEKDAY_OFFSET[day]);
   return toISODate(date);
+}
+
+export function weekdayFromIso(
+  iso: string,
+  weekEnding: string,
+): Weekday | null {
+  for (const day of WEEKDAYS) {
+    if (weekdayDate(weekEnding, day) === iso) return day;
+  }
+  return null;
 }
 
 export function formatUSDate(iso: string): string {
@@ -188,8 +241,32 @@ export function pageTotal(lines: JobLine[]): number {
 
 export function weeklyTotal(sheet: PaySheet): number {
   return roundMoney(
-    WEEKDAYS.reduce((sum, day) => sum + pageTotal(sheet.days[day]), 0),
+    WEEKDAYS.reduce((sum, day) => sum + pageTotal(sheet.days[day] ?? []), 0),
   );
+}
+
+export function sheetHasWork(sheet: PaySheet): boolean {
+  return WEEKDAYS.some((day) =>
+    (sheet.days[day] ?? []).some((line) => jobHasContent(line)),
+  );
+}
+
+export function ensureSheet(partial: Partial<PaySheet> | null | undefined): PaySheet {
+  const blank = createBlankSheet();
+  const weekEnding = partial?.weekEnding || blank.weekEnding;
+  const days = { ...blank.days };
+  for (const day of WEEKDAYS) {
+    const rows = partial?.days?.[day];
+    days[day] = rows?.length
+      ? rows
+      : emptyDay(4, weekdayDate(weekEnding, day), day);
+  }
+  return {
+    installerName: partial?.installerName ?? "",
+    helperName: partial?.helperName ?? "",
+    weekEnding,
+    days,
+  };
 }
 
 export function printedJobs(lines: JobLine[], minRows = 20): JobLine[] {
@@ -239,6 +316,7 @@ export function createSampleSheet(codes: PieceCode[] = STARTER_CODES): PaySheet 
   const mon = weekdayDate(sheet.weekEnding, "monday");
   const tue = weekdayDate(sheet.weekEnding, "tuesday");
   const wed = weekdayDate(sheet.weekEnding, "wednesday");
+  const sat = weekdayDate(sheet.weekEnding, "saturday");
 
   function line(
     date: string,
@@ -278,6 +356,17 @@ export function createSampleSheet(codes: PieceCode[] = STARTER_CODES): PaySheet 
     line(wed, "St. Marks", "15 Pine St", "XPANEL", 2),
     line(wed, "Henderson", "214 Oak Ridge Dr", "GBL", 1, "Warranty punch"),
     ...emptyDay(2, wed),
+  ];
+  sheet.days.saturday = [
+    line(
+      sat,
+      "Henderson",
+      "214 Oak Ridge Dr",
+      "REKEY",
+      1,
+      "Weekend — Chuck approved",
+    ),
+    ...emptyDay(2, sat),
   ];
   return sheet;
 }

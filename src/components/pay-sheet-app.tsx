@@ -10,13 +10,27 @@ import {
   createBlankSheet,
   createSampleSheet,
   formatMoney,
+  formatUSDate,
+  nextSaturday,
   pdfFilename,
+  saturdayOfWeek,
+  sheetHasWork,
+  toISODate,
+  weekdayFromIso,
   weeklyTotal,
   type PaySheet,
   type Weekday,
 } from "@/lib/pay-sheet";
 import { downloadPagesPdf } from "@/lib/pdf";
-import { loadCodes, loadDraft, saveCodes, saveDraft } from "@/lib/storage";
+import {
+  listWeeks,
+  loadCodes,
+  loadDraft,
+  openOrCreateWeek,
+  saveCodes,
+  saveDraft,
+  type WeekSummary,
+} from "@/lib/storage";
 import {
   Download,
   FileSpreadsheet,
@@ -34,13 +48,9 @@ export function PaySheetApp() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
-  const pageRefs = useRef<Record<Weekday, HTMLDivElement | null>>({
-    monday: null,
-    tuesday: null,
-    wednesday: null,
-    thursday: null,
-    friday: null,
-  });
+  const [weeks, setWeeks] = useState<WeekSummary[]>([]);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const pageRefs = useRef<Partial<Record<Weekday, HTMLDivElement | null>>>({});
   const skipHydrate = useRef(false);
 
   useEffect(() => {
@@ -49,8 +59,12 @@ export function PaySheetApp() {
     const id = window.setTimeout(() => {
       setCodes(storedCodes);
       if (!skipHydrate.current) {
-        setSheet(draft ?? createBlankSheet());
+        const next = draft ?? createBlankSheet();
+        setSheet(next);
+        const today = weekdayFromIso(toISODate(new Date()), next.weekEnding);
+        if (today) setDay(today);
       }
+      setWeeks(listWeeks());
       setReady(true);
     }, 0);
     return () => window.clearTimeout(id);
@@ -61,6 +75,8 @@ export function PaySheetApp() {
     const handle = window.setTimeout(() => {
       saveDraft(sheet);
       saveCodes(codes);
+      setWeeks(listWeeks());
+      setSavedAt(Date.now());
     }, 250);
     return () => window.clearTimeout(handle);
   }, [sheet, codes, ready]);
@@ -71,10 +87,25 @@ export function PaySheetApp() {
   }
 
   function handleNew() {
-    updateSheet(createBlankSheet());
+    if (
+      sheetHasWork(sheet) &&
+      !window.confirm(
+        "Save this week on this device and start a blank sheet? You can reopen the saved week anytime.",
+      )
+    ) {
+      return;
+    }
+    saveDraft(sheet);
+    const next = openOrCreateWeek(nextSaturday(sheet.weekEnding), {
+      installerName: sheet.installerName,
+      helperName: sheet.helperName,
+    });
+    updateSheet(next);
     setDay("monday");
     setError(null);
-    setNotice("Started a blank week.");
+    setNotice(
+      `Saved week ending ${formatUSDate(sheet.weekEnding)} and opened week ending ${formatUSDate(next.weekEnding)}. Add lines whenever work happens.`,
+    );
   }
 
   function handleSample() {
@@ -90,6 +121,37 @@ export function PaySheetApp() {
     setTab("preview");
   }
 
+  function handleWeekEnding(raw: string) {
+    if (!raw) return;
+    const ending = saturdayOfWeek(raw);
+    if (ending === sheet.weekEnding) return;
+    saveDraft(sheet);
+    const next = openOrCreateWeek(ending, {
+      installerName: sheet.installerName,
+      helperName: sheet.helperName,
+    });
+    updateSheet(next);
+    setError(null);
+    setNotice(
+      next.weekEnding === ending && sheetHasWork(next)
+        ? `Opened week ending ${formatUSDate(ending)}. Pick up where you left off.`
+        : `Started week ending ${formatUSDate(ending)}. Add a day at a time — it saves on this device.`,
+    );
+  }
+
+  function handleOpenWeek(weekEnding: string) {
+    if (weekEnding === sheet.weekEnding) return;
+    saveDraft(sheet);
+    updateSheet(
+      openOrCreateWeek(weekEnding, {
+        installerName: sheet.installerName,
+        helperName: sheet.helperName,
+      }),
+    );
+    setError(null);
+    setNotice(`Opened week ending ${formatUSDate(weekEnding)}.`);
+  }
+
   async function handlePdf() {
     if (!sheet.installerName.trim()) {
       setError("Add an installer name before downloading the PDF.");
@@ -100,7 +162,7 @@ export function PaySheetApp() {
     const pages = WEEKDAYS.map((item) => pageRefs.current[item]).filter(
       (node): node is HTMLDivElement => Boolean(node),
     );
-    if (pages.length !== 5) {
+    if (pages.length !== WEEKDAYS.length) {
       setError("Print pages are not ready yet. Try again.");
       return;
     }
@@ -144,6 +206,13 @@ export function PaySheetApp() {
             <h1 className="font-heading text-lg leading-tight">
               Payroll detail log
             </h1>
+            <p className="mt-0.5 text-xs text-[#6f675c]">
+              {savedAt
+                ? `Saved on this device · ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                : ready
+                  ? "Saves on this device as you type"
+                  : "Loading…"}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={handleNew} disabled={!ready}>
@@ -201,20 +270,23 @@ export function PaySheetApp() {
           ) : null}
 
           <div className={tab === "edit" ? "block" : "hidden xl:block"}>
-          {ready ? (
-            <PaySheetForm
-              sheet={sheet}
-              codes={codes}
-              day={day}
-              onDayChange={setDay}
-              onChange={updateSheet}
-              onCodesChange={setCodes}
-            />
-          ) : (
-            <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
-              Loading draft…
-            </p>
-          )}
+            {ready ? (
+              <PaySheetForm
+                sheet={sheet}
+                codes={codes}
+                day={day}
+                weeks={weeks}
+                onDayChange={setDay}
+                onChange={updateSheet}
+                onCodesChange={setCodes}
+                onWeekEndingChange={handleWeekEnding}
+                onOpenWeek={handleOpenWeek}
+              />
+            ) : (
+              <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
+                Loading saved week…
+              </p>
+            )}
           </div>
         </div>
 
@@ -229,8 +301,8 @@ export function PaySheetApp() {
                   sheet={sheet}
                   day={day}
                   page={WEEKDAYS.indexOf(day) + 1}
-                  pages={5}
-                  showWeeklyTotal={day === "friday"}
+                  pages={WEEKDAYS.length}
+                  showWeeklyTotal={day === "saturday"}
                 />
               </FitPreview>
             </div>
@@ -251,8 +323,8 @@ export function PaySheetApp() {
               sheet={sheet}
               day={item}
               page={index + 1}
-              pages={5}
-              showWeeklyTotal={item === "friday"}
+              pages={WEEKDAYS.length}
+              showWeeklyTotal={item === "saturday"}
             />
           </div>
         ))}
