@@ -4,8 +4,10 @@ import { PaySheetDocument } from "@/components/pay-sheet-document";
 import { PaySheetForm } from "@/components/pay-sheet-form";
 import { Button } from "@/components/ui/button";
 import {
+  calculate,
   createBlankSheet,
   createSampleSheet,
+  formatHoursTotal,
   pdfFilename,
   type PaySheet,
 } from "@/lib/pay-sheet";
@@ -17,21 +19,25 @@ import {
   Printer,
   RotateCcw,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export function PaySheetApp() {
   const [sheet, setSheet] = useState<PaySheet>(() => createBlankSheet());
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const sheetRef = useRef<HTMLDivElement>(null);
+  const skipHydrate = useRef(false);
 
   useEffect(() => {
+    if (skipHydrate.current) {
+      setReady(true);
+      return;
+    }
     const draft = loadDraft();
     const company = loadCompany();
-    // Restore after mount so the server render stays blank and hydration matches.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage hydration
     setSheet(draft ?? createBlankSheet(company ?? undefined));
     setReady(true);
   }, []);
@@ -42,24 +48,45 @@ export function PaySheetApp() {
     return () => window.clearTimeout(handle);
   }, [sheet, ready]);
 
+  function updateSheet(next: PaySheet) {
+    skipHydrate.current = true;
+    setSheet(next);
+  }
+
   function handleNew() {
     const company = loadCompany();
-    setSheet(createBlankSheet(company ?? undefined));
+    updateSheet(createBlankSheet(company ?? undefined));
     setError(null);
+    setNotice("Started a blank sheet. Company name is kept.");
+  }
+
+  function handleSample() {
+    const sample = createSampleSheet();
+    const totals = calculate(sample);
+    updateSheet(sample);
+    setError(null);
+    setNotice(
+      `Loaded sample for ${sample.employeeName}: ${sample.jobs.length} jobs, ${formatHoursTotal(totals.totalHours)} hours.`,
+    );
+    setTab("preview");
   }
 
   async function handlePdf() {
     if (!sheetRef.current) return;
     if (!sheet.employeeName.trim()) {
       setError("Add an employee name before downloading the PDF.");
+      setNotice(null);
       setTab("edit");
       return;
     }
     setBusy(true);
     setError(null);
+    setNotice("Building PDF…");
     try {
       await downloadElementPdf(sheetRef.current, pdfFilename(sheet));
+      setNotice(`Downloaded ${pdfFilename(sheet)}`);
     } catch (err) {
+      setNotice(null);
       setError(
         err instanceof Error
           ? err.message
@@ -73,6 +100,7 @@ export function PaySheetApp() {
   function handlePrint() {
     if (!sheet.employeeName.trim()) {
       setError("Add an employee name before printing.");
+      setNotice(null);
       setTab("edit");
       return;
     }
@@ -97,14 +125,7 @@ export function PaySheetApp() {
               <RotateCcw />
               New sheet
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setSheet(createSampleSheet());
-                setError(null);
-              }}
-            >
+            <Button type="button" variant="outline" onClick={handleSample}>
               <FileSpreadsheet />
               Load sample
             </Button>
@@ -148,9 +169,14 @@ export function PaySheetApp() {
               {error}
             </p>
           ) : null}
+          {notice ? (
+            <p className="mb-3 rounded-lg bg-[#1c1915]/8 px-3 py-2 text-sm">
+              {notice}
+            </p>
+          ) : null}
 
           <div className={tab === "edit" ? "block" : "hidden lg:block"}>
-            <PaySheetForm sheet={sheet} onChange={setSheet} />
+            <PaySheetForm sheet={sheet} onChange={updateSheet} />
           </div>
         </div>
 
@@ -162,7 +188,9 @@ export function PaySheetApp() {
               Print preview
             </p>
             <div className="sheet-scroll overflow-auto rounded-xl bg-[#cfc6b6] p-2 shadow-inner lg:max-h-[calc(100vh-7rem)]">
-              <PaySheetDocument sheet={sheet} />
+              <FitPreview>
+                <PaySheetDocument sheet={sheet} />
+              </FitPreview>
             </div>
           </div>
         </aside>
@@ -171,6 +199,39 @@ export function PaySheetApp() {
       <div className="print-only">
         <div ref={sheetRef} id="pay-sheet">
           <PaySheetDocument sheet={sheet} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FitPreview({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const update = () => {
+      setScale(Math.min(1, node.clientWidth / 816));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="overflow-hidden">
+      <div style={{ height: 1056 * scale }}>
+        <div
+          style={{
+            width: 816,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+        >
+          {children}
         </div>
       </div>
     </div>
