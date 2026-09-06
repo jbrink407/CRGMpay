@@ -1,18 +1,19 @@
 # CRGM Pay
 
-A small web app for filling a **corporate weekly pay sheet** and printing it as a one-page PDF.
+A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
 
-The company form is awkward by design. This app keeps that printable layout, and moves the painful part — typing jobs, hours, and rates — into a normal form. Totals, overtime, mileage, and net pay calculate as you type.
+The printed page follows `CR Pay Sheet.xlsx`: one log per weekday (Monday–Friday), piece-rate lines, labor-code lookup, page total, Friday weekly total, and the policy footer.
+
+Data entry stays in a normal form. Totals calculate as you type.
 
 ## What it does
 
-- Enter installer (or other classification) details, week ending, and one row per job
-- Daily hours roll up from those job rows
-- Regular, overtime (1.5×), double time (2×), mileage, piece units, per diem, draws, and chargebacks calculate automatically
-- Live preview of the one-page corporate sheet
-- **Download PDF** or **Print** (Save as PDF from the print dialog)
-- PDF file name matches the usual scan style, for example `INSTALLER Joseph Scott Kemper.pdf`
-- Drafts save in the browser so a half-finished sheet is still there after refresh
+- Installer and helper names, week ending
+- One page per weekday, up to 20 piece-work lines
+- Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments, Mgr Apvl
+- Rate looks up from the Job Codes list when you pick a labor code (`qty × rate`)
+- **Download PDF** is a 5-page landscape letter packet (`INSTALLER {name}.pdf`)
+- Job codes and rates can be edited or replaced by pasting `CODE, RATE`
 
 ## Run locally
 
@@ -21,29 +22,24 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-For a production build:
+Open the printed URL from the terminal (this project uses port 43180).
 
 ```bash
 npm run build
 npm start
 ```
 
-No account or database. Everything stays in the browser.
+No account or database. Drafts and codes stay in the browser.
 
-## Filling a sheet
+## Filling a week
 
-1. Pick a classification and enter the employee name.
-2. Set week ending (Saturday is typical).
-3. Add job rows: date, customer, job number, location, ST / OT / DT hours, miles.
-4. Enter the regular rate. Overtime and double time fill from 1.5× and 2× unless you override them.
-5. Download PDF or print.
+1. Enter installer and helper.
+2. Set week ending (Saturday).
+3. Choose a weekday tab and add lines: customer, address, labor code, qty.
+4. Download PDF or print all five pages.
 
-**Load sample** fills a completed installer sheet so you can see the printed form without typing.
+**Load sample** fills Joseph Scott Kemper / Joshua Brinker with a few piece-rate lines.
 
-## Notes on the original form
+## Job codes
 
-The Excel workbook and the scanned original live on a local machine and were not available while this app was built. The printed page follows a typical corporate installer pay sheet: classification and name in the header, a seven-day hour grid, job detail lines, a pay recap, signatures, and a payroll-only block.
-
-If you attach `CR Pay Sheet.xlsx` or the original scan, the layout can be lined up cell-for-cell with the required form.
+The starter list is the Job Codes tab from the company workbook (BHL, BORE, REKEY, FD791LAB, and the rest). Paste an updated list anytime.

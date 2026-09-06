@@ -133,12 +133,17 @@
   position: absolute;
   left: -12000px;
   top: 0;
-  width: 8.5in;
+  width: 11in;
+}
+
+.print-page + .print-page {
+  page-break-before: always;
+  break-before: page;
 }
 
 @media print {
   @page {
-    size: letter;
+    size: letter landscape;
     margin: 0;
   }
 

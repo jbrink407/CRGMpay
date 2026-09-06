@@ -1,18 +1,45 @@
-export async function downloadElementPdf(
-  element: HTMLElement,
+export async function downloadPagesPdf(
+  elements: HTMLElement[],
   filename: string,
+  orientation: "landscape" | "portrait" = "landscape",
 ) {
+  if (!elements.length) {
+    throw new Error("Nothing to print.");
+  }
+
   const html2canvas = (await import("html2canvas")).default;
   const { jsPDF } = await import("jspdf");
+  const pageWidth = orientation === "landscape" ? 11 : 8.5;
+  const pageHeight = orientation === "landscape" ? 8.5 : 11;
+  const pdf = new jsPDF({
+    unit: "in",
+    format: "letter",
+    orientation,
+  });
 
+  for (const [index, element] of elements.entries()) {
+    const image = await captureElement(html2canvas, element, pageWidth, pageHeight);
+    if (index > 0) pdf.addPage("letter", orientation);
+    pdf.addImage(image.dataUrl, "JPEG", 0, 0, image.width, image.height);
+  }
+
+  pdf.save(filename);
+}
+
+async function captureElement(
+  html2canvas: typeof import("html2canvas").default,
+  element: HTMLElement,
+  pageWidth: number,
+  pageHeight: number,
+) {
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   Object.assign(iframe.style, {
     position: "fixed",
     left: "0",
     top: "0",
-    width: "8.5in",
-    height: "11in",
+    width: `${pageWidth}in`,
+    height: `${pageHeight}in`,
     border: "0",
     opacity: "0",
     pointerEvents: "none",
@@ -61,40 +88,14 @@ export async function downloadElementPdf(
       windowWidth: iframeDoc.body.scrollWidth,
       windowHeight: iframeDoc.body.scrollHeight,
     });
-
-    const image = canvas.toDataURL("image/jpeg", 0.86);
-    const pdf = new jsPDF({
-      unit: "in",
-      format: "letter",
-      orientation: "portrait",
-    });
-    const pageWidth = 8.5;
-    const pageHeight = 11;
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
     const imageHeight = (canvas.height / canvas.width) * pageWidth;
-
-    if (imageHeight <= pageHeight + 0.05) {
-      pdf.addImage(
-        image,
-        "JPEG",
-        0,
-        0,
-        pageWidth,
-        Math.min(imageHeight, pageHeight),
-      );
-    } else {
-      const ratio = pageHeight / imageHeight;
-      const width = pageWidth * ratio;
-      pdf.addImage(
-        image,
-        "JPEG",
-        (pageWidth - width) / 2,
-        0,
-        width,
-        pageHeight,
-      );
-    }
-
-    pdf.save(filename);
+    const height = Math.min(imageHeight, pageHeight);
+    const width =
+      imageHeight <= pageHeight + 0.05
+        ? pageWidth
+        : pageWidth * (pageHeight / imageHeight);
+    return { dataUrl, width, height };
   } finally {
     iframe.remove();
   }
@@ -125,7 +126,7 @@ function collectMatchingCss(element: HTMLElement): string {
     for (const rule of Array.from(cssRules)) {
       if (!(rule instanceof CSSStyleRule)) continue;
       for (const className of classes) {
-        if (rule.selectorText.includes(className)) {
+        if (className && rule.selectorText.includes(className)) {
           rules.push(rule.cssText);
           break;
         }

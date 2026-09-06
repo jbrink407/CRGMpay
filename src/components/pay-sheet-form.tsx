@@ -5,105 +5,118 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  CLASSIFICATIONS,
-  calculate,
+  emptyCode,
+  parseCodeCsv,
+  type PieceCode,
+} from "@/lib/job-codes";
+import {
+  WEEKDAYS,
+  WEEKDAY_LABELS,
+  applyCodeToLine,
   emptyJob,
   formatMoney,
-  formatHoursTotal,
+  lineAmount,
+  pageTotal,
   parseNumber,
+  weekdayDate,
   type JobLine,
   type PaySheet,
+  type Weekday,
 } from "@/lib/pay-sheet";
 import { Plus, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 interface PaySheetFormProps {
   sheet: PaySheet;
+  codes: PieceCode[];
+  day: Weekday;
+  onDayChange: (day: Weekday) => void;
   onChange: (sheet: PaySheet) => void;
+  onCodesChange: (codes: PieceCode[]) => void;
 }
 
-export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
-  const totals = calculate(sheet);
+const selectClassName =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+export function PaySheetForm({
+  sheet,
+  codes,
+  day,
+  onDayChange,
+  onChange,
+  onCodesChange,
+}: PaySheetFormProps) {
+  const [importText, setImportText] = useState("");
+  const lines = sheet.days[day];
 
   function patch(partial: Partial<PaySheet>) {
     onChange({ ...sheet, ...partial });
   }
 
-  function updateJob(id: string, partial: Partial<JobLine>) {
+  function setLines(next: JobLine[]) {
     onChange({
       ...sheet,
-      jobs: sheet.jobs.map((job) =>
-        job.id === id ? { ...job, ...partial } : job,
+      days: { ...sheet.days, [day]: next },
+    });
+  }
+
+  function updateLine(id: string, partial: Partial<JobLine>) {
+    setLines(lines.map((line) => (line.id === id ? { ...line, ...partial } : line)));
+  }
+
+  function setLineCode(id: string, code: string) {
+    setLines(
+      lines.map((line) =>
+        line.id === id ? applyCodeToLine(line, code, codes) : line,
       ),
-    });
+    );
   }
 
-  function removeJob(id: string) {
-    const next = sheet.jobs.filter((job) => job.id !== id);
-    onChange({
-      ...sheet,
-      jobs: next.length ? next : [emptyJob()],
-    });
+  function addLine(sameJob = false) {
+    const last = lines[lines.length - 1];
+    const date = weekdayDate(sheet.weekEnding, day);
+    setLines([
+      ...lines,
+      emptyJob(
+        sameJob && last
+          ? {
+              date: last.date || date,
+              customer: last.customer,
+              address: last.address,
+            }
+          : { date: last?.date || date },
+      ),
+    ]);
   }
 
-  function addJob() {
-    const last = sheet.jobs[sheet.jobs.length - 1];
-    onChange({
-      ...sheet,
-      jobs: [
-        ...sheet.jobs,
-        emptyJob({
-          date: last?.date ?? sheet.weekEnding,
-        }),
-      ],
-    });
+  function updateCode(index: number, partial: Partial<PieceCode>) {
+    onCodesChange(
+      codes.map((item, i) => (i === index ? { ...item, ...partial } : item)),
+    );
   }
 
   return (
     <div className="flex flex-col gap-6 pb-24 lg:pb-8">
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="font-heading text-sm font-medium">Who this sheet is for</h2>
+        <h2 className="font-heading text-sm font-medium">Header</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Classification prints in the header, the same way scanned sheets are
-          named.
+          Prints as INSTALLER / HELPER on the Payroll Detail Log.
         </p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {CLASSIFICATIONS.map((item) => (
-            <Button
-              key={item}
-              type="button"
-              size="sm"
-              variant={sheet.classification === item ? "default" : "outline"}
-              onClick={() => patch({ classification: item })}
-            >
-              {item}
-            </Button>
-          ))}
-        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Field label="Classification">
+          <Field label="Installer">
             <Input
-              value={sheet.classification}
+              value={sheet.installerName}
               onChange={(event) =>
-                patch({ classification: event.target.value.toUpperCase() })
-              }
-            />
-          </Field>
-          <Field label="Employee name">
-            <Input
-              value={sheet.employeeName}
-              onChange={(event) =>
-                patch({ employeeName: event.target.value })
+                patch({ installerName: event.target.value })
               }
               placeholder="Joseph Scott Kemper"
             />
           </Field>
-          <Field label="Employee no.">
+          <Field label="Helper">
             <Input
-              value={sheet.employeeNumber}
-              onChange={(event) =>
-                patch({ employeeNumber: event.target.value })
-              }
+              value={sheet.helperName}
+              onChange={(event) => patch({ helperName: event.target.value })}
+              placeholder="Joshua Brinker"
             />
           </Field>
           <Field label="Week ending">
@@ -113,119 +126,146 @@ export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
               onChange={(event) => patch({ weekEnding: event.target.value })}
             />
           </Field>
-          <Field label="Truck / crew">
-            <Input
-              value={sheet.truckOrCrew}
-              onChange={(event) => patch({ truckOrCrew: event.target.value })}
-            />
-          </Field>
-          <Field label="Phone">
-            <Input
-              value={sheet.employeePhone}
-              onChange={(event) =>
-                patch({ employeePhone: event.target.value })
-              }
-            />
-          </Field>
         </div>
       </section>
 
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-heading text-sm font-medium">Jobs this week</h2>
+            <h2 className="font-heading text-sm font-medium">Piece work</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              One row per job or work order. Daily hours and pay calculate from
-              these lines.
+              One log page per weekday, 20 lines each. Pick a labor code and
+              enter qty — PC pay rate looks up from Job Codes.
             </p>
           </div>
-          <Button type="button" size="sm" variant="outline" onClick={addJob}>
-            <Plus />
-            Add job
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => addLine(true)}
+            >
+              Same job, another code
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => addLine(false)}>
+              <Plus />
+              Add line
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {WEEKDAYS.map((item) => (
+            <Button
+              key={item}
+              type="button"
+              size="sm"
+              variant={day === item ? "default" : "outline"}
+              onClick={() => onDayChange(item)}
+            >
+              {WEEKDAY_LABELS[item]}
+              <span className="tabular-nums opacity-70">
+                {formatMoney(pageTotal(sheet.days[item]))}
+              </span>
+            </Button>
+          ))}
         </div>
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[860px] border-collapse text-sm">
+          <table className="w-full min-w-[1100px] border-collapse text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="pb-2 pr-2 font-medium">Date</th>
-                <th className="pb-2 pr-2 font-medium">Job / customer</th>
-                <th className="pb-2 pr-2 font-medium">Job no.</th>
-                <th className="pb-2 pr-2 font-medium">Location</th>
-                <th className="pb-2 pr-2 font-medium">ST</th>
-                <th className="pb-2 pr-2 font-medium">OT</th>
-                <th className="pb-2 pr-2 font-medium">DT</th>
-                <th className="pb-2 pr-2 font-medium">Units</th>
-                <th className="pb-2 pr-2 font-medium">Miles</th>
-                <th className="pb-2 pr-2 font-medium">Notes</th>
+                <th className="pb-2 pr-2 font-medium">Customer</th>
+                <th className="pb-2 pr-2 font-medium">Lot / community or address</th>
+                <th className="pb-2 pr-2 font-medium">Labor code</th>
+                <th className="pb-2 pr-2 font-medium">Qty</th>
+                <th className="pb-2 pr-2 font-medium">PC pay rate</th>
+                <th className="pb-2 pr-2 font-medium">PC pay total</th>
+                <th className="pb-2 pr-2 font-medium">Comments</th>
+                <th className="pb-2 pr-2 font-medium">Mgr</th>
                 <th className="pb-2 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {sheet.jobs.map((job) => (
-                <tr key={job.id} className="align-top">
-                  <td className="py-1 pr-2">
+              {lines.map((line) => (
+                <tr key={line.id} className="align-top">
+                  <td className="w-32 py-1 pr-2">
                     <Input
                       type="date"
-                      value={job.date}
+                      value={line.date}
                       onChange={(event) =>
-                        updateJob(job.id, { date: event.target.value })
+                        updateLine(line.id, { date: event.target.value })
                       }
                     />
                   </td>
                   <td className="py-1 pr-2">
                     <Input
-                      value={job.customer}
+                      value={line.customer}
                       onChange={(event) =>
-                        updateJob(job.id, { customer: event.target.value })
+                        updateLine(line.id, { customer: event.target.value })
                       }
                     />
                   </td>
                   <td className="py-1 pr-2">
                     <Input
-                      value={job.jobNumber}
+                      value={line.address}
                       onChange={(event) =>
-                        updateJob(job.id, { jobNumber: event.target.value })
+                        updateLine(line.id, { address: event.target.value })
+                      }
+                    />
+                  </td>
+                  <td className="w-40 py-1 pr-2">
+                    <select
+                      className={selectClassName}
+                      value={line.code}
+                      onChange={(event) =>
+                        setLineCode(line.id, event.target.value)
+                      }
+                    >
+                      <option value="">Labor code</option>
+                      {codes.map((item) => (
+                        <option key={item.code} value={item.code}>
+                          {item.code} · {formatMoney(item.rate)}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="w-20 py-1 pr-2">
+                    <NumberInput
+                      value={line.qty}
+                      onChange={(qty) => updateLine(line.id, { qty })}
+                    />
+                  </td>
+                  <td className="w-24 py-1 pr-2">
+                    <NumberInput
+                      value={line.rate}
+                      onChange={(rate) => updateLine(line.id, { rate })}
+                      money
+                    />
+                  </td>
+                  <td className="w-24 py-1 pr-2 text-right text-sm tabular-nums">
+                    {formatMoney(lineAmount(line))}
+                  </td>
+                  <td className="py-1 pr-2">
+                    <Input
+                      value={line.comments}
+                      onChange={(event) =>
+                        updateLine(line.id, { comments: event.target.value })
                       }
                     />
                   </td>
                   <td className="py-1 pr-2">
-                    <Input
-                      value={job.location}
+                    <input
+                      type="checkbox"
+                      className="size-4"
+                      checked={line.mgrApproved}
                       onChange={(event) =>
-                        updateJob(job.id, { location: event.target.value })
+                        updateLine(line.id, {
+                          mgrApproved: event.target.checked,
+                        })
                       }
-                    />
-                  </td>
-                  <NumCell
-                    value={job.regular}
-                    onChange={(regular) => updateJob(job.id, { regular })}
-                  />
-                  <NumCell
-                    value={job.overtime}
-                    onChange={(overtime) => updateJob(job.id, { overtime })}
-                  />
-                  <NumCell
-                    value={job.doubletime}
-                    onChange={(doubletime) =>
-                      updateJob(job.id, { doubletime })
-                    }
-                  />
-                  <NumCell
-                    value={job.units}
-                    onChange={(units) => updateJob(job.id, { units })}
-                  />
-                  <NumCell
-                    value={job.miles}
-                    onChange={(miles) => updateJob(job.id, { miles })}
-                  />
-                  <td className="py-1 pr-2">
-                    <Input
-                      value={job.notes}
-                      onChange={(event) =>
-                        updateJob(job.id, { notes: event.target.value })
-                      }
+                      aria-label="Manager approval"
                     />
                   </td>
                   <td className="py-1">
@@ -233,8 +273,14 @@ export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
                       type="button"
                       size="icon-sm"
                       variant="ghost"
-                      aria-label="Remove job"
-                      onClick={() => removeJob(job.id)}
+                      aria-label="Remove line"
+                      onClick={() =>
+                        setLines(
+                          lines.length > 1
+                            ? lines.filter((item) => item.id !== line.id)
+                            : [emptyJob({ date: weekdayDate(sheet.weekEnding, day) })],
+                        )
+                      }
                     >
                       <Trash2 />
                     </Button>
@@ -246,21 +292,27 @@ export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
         </div>
 
         <div className="mt-4 grid gap-3 lg:hidden">
-          {sheet.jobs.map((job, index) => (
+          {lines.map((line, index) => (
             <div
-              key={job.id}
+              key={line.id}
               className="rounded-lg bg-muted/40 p-3 ring-1 ring-foreground/10"
             >
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Job {index + 1}
+                  Line {index + 1}
                 </p>
                 <Button
                   type="button"
                   size="icon-xs"
                   variant="ghost"
-                  aria-label="Remove job"
-                  onClick={() => removeJob(job.id)}
+                  aria-label="Remove line"
+                  onClick={() =>
+                    setLines(
+                      lines.length > 1
+                        ? lines.filter((item) => item.id !== line.id)
+                        : [emptyJob({ date: weekdayDate(sheet.weekEnding, day) })],
+                    )
+                  }
                 >
                   <Trash2 />
                 </Button>
@@ -269,78 +321,83 @@ export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
                 <Field label="Date">
                   <Input
                     type="date"
-                    value={job.date}
+                    value={line.date}
                     onChange={(event) =>
-                      updateJob(job.id, { date: event.target.value })
+                      updateLine(line.id, { date: event.target.value })
                     }
                   />
                 </Field>
-                <Field label="Job no.">
-                  <Input
-                    value={job.jobNumber}
+                <Field label="Labor code">
+                  <select
+                    className={selectClassName}
+                    value={line.code}
                     onChange={(event) =>
-                      updateJob(job.id, { jobNumber: event.target.value })
+                      setLineCode(line.id, event.target.value)
                     }
-                  />
+                  >
+                    <option value="">Labor code</option>
+                    {codes.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.code} · {formatMoney(item.rate)}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
                 <div className="col-span-2">
-                  <Field label="Job / customer">
+                  <Field label="Customer">
                     <Input
-                      value={job.customer}
+                      value={line.customer}
                       onChange={(event) =>
-                        updateJob(job.id, { customer: event.target.value })
+                        updateLine(line.id, { customer: event.target.value })
                       }
                     />
                   </Field>
                 </div>
                 <div className="col-span-2">
-                  <Field label="Location">
+                  <Field label="Lot / community or address">
                     <Input
-                      value={job.location}
+                      value={line.address}
                       onChange={(event) =>
-                        updateJob(job.id, { location: event.target.value })
+                        updateLine(line.id, { address: event.target.value })
                       }
                     />
                   </Field>
                 </div>
-                <Field label="Regular hrs">
+                <Field label="Qty">
                   <NumberInput
-                    value={job.regular}
-                    onChange={(regular) => updateJob(job.id, { regular })}
+                    value={line.qty}
+                    onChange={(qty) => updateLine(line.id, { qty })}
                   />
                 </Field>
-                <Field label="OT hrs">
+                <Field label="PC pay rate">
                   <NumberInput
-                    value={job.overtime}
-                    onChange={(overtime) => updateJob(job.id, { overtime })}
+                    value={line.rate}
+                    onChange={(rate) => updateLine(line.id, { rate })}
+                    money
                   />
                 </Field>
-                <Field label="DT hrs">
-                  <NumberInput
-                    value={job.doubletime}
-                    onChange={(doubletime) =>
-                      updateJob(job.id, { doubletime })
+                <Field label="PC pay total">
+                  <p className="flex h-8 items-center text-sm tabular-nums">
+                    {formatMoney(lineAmount(line))}
+                  </p>
+                </Field>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="size-4"
+                    checked={line.mgrApproved}
+                    onChange={(event) =>
+                      updateLine(line.id, { mgrApproved: event.target.checked })
                     }
                   />
-                </Field>
-                <Field label="Units">
-                  <NumberInput
-                    value={job.units}
-                    onChange={(units) => updateJob(job.id, { units })}
-                  />
-                </Field>
-                <Field label="Miles">
-                  <NumberInput
-                    value={job.miles}
-                    onChange={(miles) => updateJob(job.id, { miles })}
-                  />
-                </Field>
+                  Mgr apvl
+                </label>
                 <div className="col-span-2">
-                  <Field label="Notes">
+                  <Field label="Comments">
                     <Input
-                      value={job.notes}
+                      value={line.comments}
                       onChange={(event) =>
-                        updateJob(job.id, { notes: event.target.value })
+                        updateLine(line.id, { comments: event.target.value })
                       }
                     />
                   </Field>
@@ -352,148 +409,91 @@ export function PaySheetForm({ sheet, onChange }: PaySheetFormProps) {
       </section>
 
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="font-heading text-sm font-medium">Rates and pay</h2>
+        <h2 className="font-heading text-sm font-medium">Job codes</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Overtime defaults to 1.5× and double time to 2× the regular rate.
-          Override either rate if payroll uses a posted figure.
+          From the Job Codes tab. Paste an updated list as CODE, RATE.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Regular rate">
-            <NumberInput
-              value={sheet.regularRate}
-              onChange={(regularRate) => patch({ regularRate })}
-              money
-            />
-          </Field>
-          <Field label="OT rate override">
-            <NumberInput
-              value={sheet.overtimeRateOverride ?? 0}
-              onChange={(value) =>
-                patch({ overtimeRateOverride: value || null })
-              }
-              money
-            />
-          </Field>
-          <Field label="DT rate override">
-            <NumberInput
-              value={sheet.doubletimeRateOverride ?? 0}
-              onChange={(value) =>
-                patch({ doubletimeRateOverride: value || null })
-              }
-              money
-            />
-          </Field>
-          <Field label="Mileage rate">
-            <NumberInput
-              value={sheet.mileageRate}
-              onChange={(mileageRate) => patch({ mileageRate })}
-              money
-            />
-          </Field>
-          <Field label="Unit / piece rate">
-            <NumberInput
-              value={sheet.unitRate}
-              onChange={(unitRate) => patch({ unitRate })}
-              money
-            />
-          </Field>
-          <Field label="Per diem">
-            <NumberInput
-              value={sheet.perDiem}
-              onChange={(perDiem) => patch({ perDiem })}
-              money
-            />
-          </Field>
-          <Field label="Other earnings">
-            <NumberInput
-              value={sheet.otherEarnings}
-              onChange={(otherEarnings) => patch({ otherEarnings })}
-              money
-            />
-          </Field>
-          <Field label="Other earnings label">
-            <Input
-              value={sheet.otherEarningsLabel}
-              onChange={(event) =>
-                patch({ otherEarningsLabel: event.target.value })
-              }
-            />
-          </Field>
-          <Field label="Draw / advance">
-            <NumberInput
-              value={sheet.draw}
-              onChange={(draw) => patch({ draw })}
-              money
-            />
-          </Field>
-          <Field label="Chargebacks">
-            <NumberInput
-              value={sheet.chargebacks}
-              onChange={(chargebacks) => patch({ chargebacks })}
-              money
-            />
-          </Field>
-          <Field label="Other deductions">
-            <NumberInput
-              value={sheet.otherDeductions}
-              onChange={(otherDeductions) => patch({ otherDeductions })}
-              money
-            />
-          </Field>
-          <Field label="Other deductions label">
-            <Input
-              value={sheet.otherDeductionsLabel}
-              onChange={(event) =>
-                patch({ otherDeductionsLabel: event.target.value })
-              }
-            />
-          </Field>
+        <div className="mt-3 max-h-64 overflow-auto rounded-lg ring-1 ring-foreground/10">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-card">
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="px-2 py-2 font-medium">Code</th>
+                <th className="px-2 py-2 font-medium">Rate</th>
+                <th className="w-10 px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((item, index) => (
+                <tr key={`${item.code}-${index}`} className="border-t">
+                  <td className="px-2 py-1">
+                    <Input
+                      value={item.code}
+                      onChange={(event) =>
+                        updateCode(index, {
+                          code: event.target.value.toUpperCase(),
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <NumberInput
+                      value={item.rate}
+                      onChange={(rate) => updateCode(index, { rate })}
+                      money
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      aria-label={`Remove ${item.code}`}
+                      onClick={() =>
+                        onCodesChange(codes.filter((_, i) => i !== index))
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-muted/60 p-3 text-sm sm:grid-cols-4">
-          <Stat label="Hours" value={formatHoursTotal(totals.totalHours)} />
-          <Stat label="Gross" value={formatMoney(totals.gross)} />
-          <Stat label="Deductions" value={formatMoney(totals.totalDeductions)} />
-          <Stat label="Net" value={formatMoney(totals.net)} />
+        <div className="mt-3">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onCodesChange([...codes, emptyCode()])}
+          >
+            <Plus />
+            Add code
+          </Button>
         </div>
-      </section>
-
-      <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="font-heading text-sm font-medium">Company on the form</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Field label="Company name">
-            <Input
-              value={sheet.companyName}
-              onChange={(event) => patch({ companyName: event.target.value })}
+        <div className="mt-4 grid gap-2">
+          <Field label="Paste codes (CODE, RATE — one per line)">
+            <Textarea
+              rows={4}
+              value={importText}
+              onChange={(event) => setImportText(event.target.value)}
+              placeholder={"BHL, 1.64\nBORE, 10.25\nREKEY, 20.50"}
             />
           </Field>
-          <Field label="Phone">
-            <Input
-              value={sheet.companyPhone}
-              onChange={(event) => patch({ companyPhone: event.target.value })}
-            />
-          </Field>
-          <div className="sm:col-span-2">
-            <Field label="Address">
-              <Textarea
-                rows={2}
-                value={sheet.companyAddress}
-                onChange={(event) =>
-                  patch({ companyAddress: event.target.value })
-                }
-              />
-            </Field>
-          </div>
-          <div className="sm:col-span-2">
-            <Field label="Remarks">
-              <Textarea
-                rows={3}
-                value={sheet.remarks}
-                onChange={(event) => patch({ remarks: event.target.value })}
-                placeholder="Callouts, materials, or anything payroll needs to see."
-              />
-            </Field>
-          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const parsed = parseCodeCsv(importText);
+              if (parsed.length) {
+                onCodesChange(parsed);
+                setImportText("");
+              }
+            }}
+          >
+            Replace list from paste
+          </Button>
         </div>
       </section>
     </div>
@@ -512,29 +512,6 @@ function Field({
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </label>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-medium tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function NumCell({
-  value,
-  onChange,
-}: {
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <td className="w-20 py-1 pr-2">
-      <NumberInput value={value} onChange={onChange} />
-    </td>
   );
 }
 

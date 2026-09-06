@@ -1,101 +1,60 @@
-export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-export type DayKey = (typeof DAYS)[number];
+import {
+  findCode,
+  STARTER_CODES,
+  type PieceCode,
+} from "@/lib/job-codes";
 
-export const DAY_LABELS: Record<DayKey, string> = {
-  sun: "SUN",
-  mon: "MON",
-  tue: "TUE",
-  wed: "WED",
-  thu: "THU",
-  fri: "FRI",
-  sat: "SAT",
+export const WEEKDAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+] as const;
+
+export type Weekday = (typeof WEEKDAYS)[number];
+
+export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
 };
 
-export const CLASSIFICATIONS = [
-  "INSTALLER",
-  "HELPER",
-  "FOREMAN",
-  "LABORER",
-  "APPRENTICE",
-  "LEAD",
-] as const;
+export const POLICY_LINES = [
+  "LEAD NAME and HELPER NAME and DATE work performed are required on every work sheet",
+  "GPS is required to be turned on at all times during work hours on device utilizing DispatchTrack",
+  "Punch Correction forms must be turned in for any missed punches by end of same business day",
+  "Paid and unpaid PTO must be requested onlinme through AllPay by end of same business day",
+  "Each day's work should be totalled on Page Total line, last workday total on Weekly Total line",
+  "Hourly and Piece Pay installers are required to punch in and out DAILY",
+  "Pay sheets may be adjusted for price reconciliation or cost reallocation by the review team and/or leadership",
+  "Any missing pay sheets may delay pay until the following week",
+  "Any overtime and/or weekend work must be pre-approved by Charles Wiggins prior to workday and all weekend pay sheets and",
+  "     punch corrections must be texted to Chuck (404-449-2378) and Stacy (404-379 7870) by end of same business day",
+];
+
+export const POLICY_FOOTER =
+  "EMPLOYEES ARE RESPONSIBLE FOR FOLLOWING TIME KEEPING PROCEDURES PER COMPANY POLICY";
 
 export interface JobLine {
   id: string;
   date: string;
-  jobNumber: string;
   customer: string;
-  location: string;
-  regular: number;
-  overtime: number;
-  doubletime: number;
-  units: number;
-  miles: number;
-  notes: string;
+  address: string;
+  code: string;
+  qty: number;
+  rate: number;
+  comments: string;
+  mgrApproved: boolean;
 }
 
 export interface PaySheet {
-  companyName: string;
-  companyAddress: string;
-  companyPhone: string;
-  formTitle: string;
-  classification: string;
-  employeeName: string;
-  employeeNumber: string;
-  employeePhone: string;
-  truckOrCrew: string;
+  installerName: string;
+  helperName: string;
   weekEnding: string;
-  regularRate: number;
-  overtimeMultiplier: number;
-  overtimeRateOverride: number | null;
-  doubletimeMultiplier: number;
-  doubletimeRateOverride: number | null;
-  mileageRate: number;
-  unitRate: number;
-  perDiem: number;
-  otherEarnings: number;
-  otherEarningsLabel: string;
-  draw: number;
-  chargebacks: number;
-  otherDeductions: number;
-  otherDeductionsLabel: string;
-  remarks: string;
-  jobs: JobLine[];
-}
-
-export interface DailyTotals {
-  date: string;
-  regular: number;
-  overtime: number;
-  doubletime: number;
-  units: number;
-  miles: number;
-  hours: number;
-}
-
-export interface PayTotals {
-  regularHours: number;
-  overtimeHours: number;
-  doubletimeHours: number;
-  totalHours: number;
-  units: number;
-  miles: number;
-  regularPay: number;
-  overtimePay: number;
-  doubletimePay: number;
-  mileagePay: number;
-  unitPay: number;
-  perDiem: number;
-  otherEarnings: number;
-  gross: number;
-  draw: number;
-  chargebacks: number;
-  otherDeductions: number;
-  totalDeductions: number;
-  net: number;
-  overtimeRate: number;
-  doubletimeRate: number;
-  byDay: Record<DayKey, DailyTotals>;
+  days: Record<Weekday, JobLine[]>;
 }
 
 export function newId(): string {
@@ -109,17 +68,19 @@ export function emptyJob(partial: Partial<JobLine> = {}): JobLine {
   return {
     id: newId(),
     date: "",
-    jobNumber: "",
     customer: "",
-    location: "",
-    regular: 0,
-    overtime: 0,
-    doubletime: 0,
-    units: 0,
-    miles: 0,
-    notes: "",
+    address: "",
+    code: "",
+    qty: 0,
+    rate: 0,
+    comments: "",
+    mgrApproved: false,
     ...partial,
   };
+}
+
+export function emptyDay(count = 4, date = ""): JobLine[] {
+  return Array.from({ length: count }, () => emptyJob({ date }));
 }
 
 export function toISODate(date: Date): string {
@@ -143,15 +104,15 @@ export function lastSaturday(from = new Date()): string {
   return toISODate(date);
 }
 
-export function weekDates(weekEnding: string): Record<DayKey, string> {
+/** Week ending is Saturday; Mon–Fri are the five workdays before it. */
+export function weekdayDate(weekEnding: string, day: Weekday): string {
   const end = parseISODate(weekEnding) ?? parseISODate(lastSaturday())!;
-  const dates = {} as Record<DayKey, string>;
-  DAYS.forEach((day, index) => {
-    const d = new Date(end);
-    d.setDate(end.getDate() - (6 - index));
-    dates[day] = toISODate(d);
-  });
-  return dates;
+  const offset = { monday: 5, tuesday: 4, wednesday: 3, thursday: 2, friday: 1 }[
+    day
+  ];
+  const date = new Date(end);
+  date.setDate(end.getDate() - offset);
+  return toISODate(date);
 }
 
 export function formatUSDate(iso: string): string {
@@ -160,23 +121,8 @@ export function formatUSDate(iso: string): string {
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 }
 
-export function formatWeekdayDate(iso: string): string {
-  const date = parseISODate(iso);
-  if (!date) return "";
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "numeric",
-    day: "numeric",
-  });
-}
-
-export function formatHours(value: number): string {
+export function formatQty(value: number): string {
   if (!value) return "";
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-}
-
-export function formatHoursTotal(value: number): string {
   const rounded = Math.round(value * 100) / 100;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
 }
@@ -198,257 +144,127 @@ export function formatRate(value: number): string {
   });
 }
 
-export function overtimeRate(sheet: PaySheet): number {
-  if (sheet.overtimeRateOverride != null && sheet.overtimeRateOverride > 0) {
-    return sheet.overtimeRateOverride;
-  }
-  return roundMoney(sheet.regularRate * sheet.overtimeMultiplier);
-}
-
-export function doubletimeRate(sheet: PaySheet): number {
-  if (sheet.doubletimeRateOverride != null && sheet.doubletimeRateOverride > 0) {
-    return sheet.doubletimeRateOverride;
-  }
-  return roundMoney(sheet.regularRate * sheet.doubletimeMultiplier);
-}
-
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function emptyDaily(date: string): DailyTotals {
-  return {
-    date,
-    regular: 0,
-    overtime: 0,
-    doubletime: 0,
-    units: 0,
-    miles: 0,
-    hours: 0,
-  };
+export function lineAmount(line: JobLine): number {
+  return roundMoney(line.qty * line.rate);
 }
 
-export function calculate(sheet: PaySheet): PayTotals {
-  const dates = weekDates(sheet.weekEnding);
-  const byDay = {} as Record<DayKey, DailyTotals>;
-  for (const day of DAYS) {
-    byDay[day] = emptyDaily(dates[day]);
-  }
-
-  for (const job of sheet.jobs) {
-    if (!job.date) continue;
-    const day = DAYS.find((key) => dates[key] === job.date);
-    if (!day) continue;
-    byDay[day].regular += job.regular;
-    byDay[day].overtime += job.overtime;
-    byDay[day].doubletime += job.doubletime;
-    byDay[day].units += job.units;
-    byDay[day].miles += job.miles;
-    byDay[day].hours += job.regular + job.overtime + job.doubletime;
-  }
-
-  const regularHours = sheet.jobs.reduce((sum, job) => sum + job.regular, 0);
-  const overtimeHours = sheet.jobs.reduce((sum, job) => sum + job.overtime, 0);
-  const doubletimeHours = sheet.jobs.reduce(
-    (sum, job) => sum + job.doubletime,
-    0,
-  );
-  const units = sheet.jobs.reduce((sum, job) => sum + job.units, 0);
-  const miles = sheet.jobs.reduce((sum, job) => sum + job.miles, 0);
-
-  const ot = overtimeRate(sheet);
-  const dt = doubletimeRate(sheet);
-
-  const regularPay = roundMoney(regularHours * sheet.regularRate);
-  const overtimePay = roundMoney(overtimeHours * ot);
-  const doubletimePay = roundMoney(doubletimeHours * dt);
-  const mileagePay = roundMoney(miles * sheet.mileageRate);
-  const unitPay = roundMoney(units * sheet.unitRate);
-  const perDiem = roundMoney(sheet.perDiem);
-  const otherEarnings = roundMoney(sheet.otherEarnings);
-
-  const gross = roundMoney(
-    regularPay +
-      overtimePay +
-      doubletimePay +
-      mileagePay +
-      unitPay +
-      perDiem +
-      otherEarnings,
-  );
-
-  const draw = roundMoney(sheet.draw);
-  const chargebacks = roundMoney(sheet.chargebacks);
-  const otherDeductions = roundMoney(sheet.otherDeductions);
-  const totalDeductions = roundMoney(draw + chargebacks + otherDeductions);
-  const net = roundMoney(gross - totalDeductions);
-
+export function applyCodeToLine(
+  line: JobLine,
+  code: string,
+  codes: PieceCode[],
+): JobLine {
+  const match = findCode(codes, code);
   return {
-    regularHours,
-    overtimeHours,
-    doubletimeHours,
-    totalHours: regularHours + overtimeHours + doubletimeHours,
-    units,
-    miles,
-    regularPay,
-    overtimePay,
-    doubletimePay,
-    mileagePay,
-    unitPay,
-    perDiem,
-    otherEarnings,
-    gross,
-    draw,
-    chargebacks,
-    otherDeductions,
-    totalDeductions,
-    net,
-    overtimeRate: ot,
-    doubletimeRate: dt,
-    byDay,
+    ...line,
+    code: match?.code || code.toUpperCase(),
+    rate: match?.rate ?? 0,
   };
-}
-
-export function printedJobs(sheet: PaySheet, minRows = 10): JobLine[] {
-  const rows = sheet.jobs.filter((job) => jobHasContent(job));
-  const padded = [...rows];
-  while (padded.length < minRows) {
-    padded.push(emptyJob({ id: `blank-${padded.length}` }));
-  }
-  return padded;
 }
 
 export function jobHasContent(job: JobLine): boolean {
   return Boolean(
-    job.date ||
-      job.jobNumber ||
-      job.customer ||
-      job.location ||
-      job.notes ||
-      job.regular ||
-      job.overtime ||
-      job.doubletime ||
-      job.units ||
-      job.miles,
+    job.customer ||
+      job.address ||
+      job.comments ||
+      job.code ||
+      job.qty ||
+      job.rate ||
+      job.mgrApproved,
   );
 }
 
+export function pageTotal(lines: JobLine[]): number {
+  return roundMoney(
+    lines.reduce((sum, line) => sum + lineAmount(line), 0),
+  );
+}
+
+export function weeklyTotal(sheet: PaySheet): number {
+  return roundMoney(
+    WEEKDAYS.reduce((sum, day) => sum + pageTotal(sheet.days[day]), 0),
+  );
+}
+
+export function printedJobs(lines: JobLine[], minRows = 20): JobLine[] {
+  const rows = lines.filter((job) => jobHasContent(job) || job.date);
+  const padded = [...rows];
+  while (padded.length < minRows) {
+    padded.push(emptyJob({ id: `blank-${padded.length}` }));
+  }
+  return padded.slice(0, minRows);
+}
+
 export function pdfFilename(sheet: PaySheet): string {
-  const classification = (sheet.classification || "PAY").trim().toUpperCase();
-  const name = (sheet.employeeName || "SHEET").trim();
-  return `${classification} ${name}.pdf`;
+  const name = (sheet.installerName || "SHEET").trim();
+  return `INSTALLER ${name}.pdf`;
 }
 
-export function createBlankSheet(
-  company?: Partial<
-    Pick<PaySheet, "companyName" | "companyAddress" | "companyPhone">
-  >,
-): PaySheet {
-  return {
-    companyName: company?.companyName || "CRGM",
-    companyAddress: company?.companyAddress || "",
-    companyPhone: company?.companyPhone || "",
-    formTitle: "WEEKLY PAY SHEET",
-    classification: "INSTALLER",
-    employeeName: "",
-    employeeNumber: "",
-    employeePhone: "",
-    truckOrCrew: "",
-    weekEnding: lastSaturday(),
-    regularRate: 0,
-    overtimeMultiplier: 1.5,
-    overtimeRateOverride: null,
-    doubletimeMultiplier: 2,
-    doubletimeRateOverride: null,
-    mileageRate: 0,
-    unitRate: 0,
-    perDiem: 0,
-    otherEarnings: 0,
-    otherEarningsLabel: "Other",
-    draw: 0,
-    chargebacks: 0,
-    otherDeductions: 0,
-    otherDeductionsLabel: "Other deductions",
-    remarks: "",
-    jobs: [emptyJob(), emptyJob(), emptyJob(), emptyJob()],
-  };
-}
-
-export function createSampleSheet(): PaySheet {
+export function createBlankSheet(): PaySheet {
   const weekEnding = lastSaturday();
-  const dates = weekDates(weekEnding);
+  const days = {} as Record<Weekday, JobLine[]>;
+  for (const day of WEEKDAYS) {
+    days[day] = emptyDay(4, weekdayDate(weekEnding, day));
+  }
   return {
-    ...createBlankSheet(),
-    companyName: "CRGM",
-    companyAddress: "",
-    classification: "INSTALLER",
-    employeeName: "Joseph Scott Kemper",
-    employeeNumber: "1042",
-    employeePhone: "",
-    truckOrCrew: "3",
+    installerName: "",
+    helperName: "",
     weekEnding,
-    regularRate: 28,
-    overtimeMultiplier: 1.5,
-    overtimeRateOverride: null,
-    doubletimeMultiplier: 2,
-    doubletimeRateOverride: null,
-    mileageRate: 0.67,
-    unitRate: 0,
-    perDiem: 0,
-    jobs: [
-      emptyJob({
-        date: dates.mon,
-        jobNumber: "4418",
-        customer: "Henderson residence",
-        location: "214 Oak Ridge Dr",
-        regular: 8,
-        miles: 22,
-      }),
-      emptyJob({
-        date: dates.tue,
-        jobNumber: "4421",
-        customer: "Westfield Apts — Bldg C",
-        location: "88 Commerce Blvd",
-        regular: 8,
-        miles: 18,
-      }),
-      emptyJob({
-        date: dates.wed,
-        jobNumber: "4421",
-        customer: "Westfield Apts — Bldg C",
-        location: "88 Commerce Blvd",
-        regular: 8,
-        miles: 18,
-      }),
-      emptyJob({
-        date: dates.thu,
-        jobNumber: "4430",
-        customer: "St. Marks remodel",
-        location: "15 Pine St",
-        regular: 8,
-        overtime: 1.5,
-        miles: 31,
-        notes: "After-hours set",
-      }),
-      emptyJob({
-        date: dates.fri,
-        jobNumber: "4433",
-        customer: "Callback — Henderson",
-        location: "214 Oak Ridge Dr",
-        regular: 4,
-        miles: 22,
-        notes: "Warranty punch",
-      }),
-      emptyJob({
-        date: dates.fri,
-        jobNumber: "4436",
-        customer: "Miller kitchen",
-        location: "902 Maple Ave",
-        regular: 4,
-        miles: 9,
-      }),
-    ],
+    days,
   };
+}
+
+export function createSampleSheet(codes: PieceCode[] = STARTER_CODES): PaySheet {
+  const sheet = createBlankSheet();
+  sheet.installerName = "Joseph Scott Kemper";
+  sheet.helperName = "Joshua Brinker";
+  const mon = weekdayDate(sheet.weekEnding, "monday");
+  const tue = weekdayDate(sheet.weekEnding, "tuesday");
+  const wed = weekdayDate(sheet.weekEnding, "wednesday");
+
+  function line(
+    date: string,
+    customer: string,
+    address: string,
+    code: string,
+    qty: number,
+    comments = "",
+  ): JobLine {
+    const match = findCode(codes, code);
+    return emptyJob({
+      date,
+      customer,
+      address,
+      code: match?.code || code,
+      qty,
+      rate: match?.rate ?? 0,
+      comments,
+    });
+  }
+
+  sheet.days.monday = [
+    line(mon, "Henderson", "214 Oak Ridge Dr", "BORE", 2),
+    line(mon, "Henderson", "214 Oak Ridge Dr", "HSLAB", 3),
+    line(mon, "Henderson", "214 Oak Ridge Dr", "LOCLAB", 3),
+    line(mon, "Henderson", "214 Oak Ridge Dr", "REKEY", 1),
+    ...emptyDay(2, mon),
+  ];
+  sheet.days.tuesday = [
+    line(tue, "Westfield Apts", "Bldg C / 88 Commerce Blvd", "FD791LAB", 1),
+    line(tue, "Westfield Apts", "Bldg C / 88 Commerce Blvd", "FECLAB", 2),
+    line(tue, "Westfield Apts", "Bldg C / 88 Commerce Blvd", "KICKLAB", 4),
+    ...emptyDay(2, tue),
+  ];
+  sheet.days.wednesday = [
+    line(wed, "St. Marks", "15 Pine St", "STEAMLAB", 1),
+    line(wed, "St. Marks", "15 Pine St", "XPANEL", 2),
+    line(wed, "Henderson", "214 Oak Ridge Dr", "GBL", 1, "Warranty punch"),
+    ...emptyDay(2, wed),
+  ];
+  return sheet;
 }
 
 export function parseNumber(value: string): number {

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRGM Pay — Weekly pay sheet",
+  title: "CRGM Pay — Payroll detail log",
   description:
-    "Fill a corporate weekly pay sheet in the browser and print or download a one-page PDF.",
+    "Fill the corporate payroll detail log and print a landscape PDF that matches the company pay sheet.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
