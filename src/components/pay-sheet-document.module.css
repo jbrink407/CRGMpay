@@ -1,0 +1,258 @@
+.page {
+  width: 8.5in;
+  min-height: 11in;
+  box-sizing: border-box;
+  padding: 0.38in 0.4in 0.32in;
+  background: #ffffff;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  line-height: 1.2;
+  -webkit-font-smoothing: antialiased;
+}
+
+.frame {
+  border: 2px solid #000;
+  min-height: 10.2in;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1.6fr 1.1fr;
+  border-bottom: 2px solid #000;
+}
+
+.brand {
+  padding: 8px 10px 7px;
+}
+
+.company {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.address {
+  margin-top: 4px;
+  font-size: 9px;
+  min-height: 22px;
+  white-space: pre-wrap;
+}
+
+.titleBlock {
+  border-left: 2px solid #000;
+  background: #000;
+  color: #fff;
+  padding: 8px 10px;
+  text-align: right;
+}
+
+.formTitle {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+}
+
+.formMeta {
+  margin-top: 4px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 0.9fr;
+  border-bottom: 2px solid #000;
+}
+
+.cell {
+  border-right: 1px solid #000;
+  padding: 4px 7px 5px;
+  min-height: 34px;
+}
+
+.cell:last-child {
+  border-right: 0;
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.label {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #222;
+}
+
+.value {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 16px;
+  text-transform: uppercase;
+}
+
+.valueNormal {
+  text-transform: none;
+  font-weight: 600;
+}
+
+.sectionHead {
+  background: #000;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  border: 1px solid #000;
+  padding: 3px 4px;
+  vertical-align: middle;
+}
+
+.table th {
+  background: #e8e8e8;
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: #444;
+}
+
+.jobTable td {
+  height: 18px;
+  font-size: 10px;
+}
+
+.payWrap {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  flex: 1;
+}
+
+.payLeft {
+  border-right: 2px solid #000;
+}
+
+.payRow {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.15fr 0.75fr 0.15fr 0.9fr;
+  border-bottom: 1px solid #000;
+  align-items: center;
+}
+
+.payRow span {
+  padding: 3px 6px;
+  min-height: 18px;
+}
+
+.payRow .lab {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.totalRow {
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+}
+
+.remarks {
+  padding: 6px 8px;
+  min-height: 54px;
+}
+
+.signGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 2px solid #000;
+}
+
+.signBox {
+  padding: 8px 10px 10px;
+  min-height: 72px;
+}
+
+.signBox + .signBox {
+  border-left: 1px solid #000;
+}
+
+.signLine {
+  margin-top: 22px;
+  border-top: 1px solid #000;
+  padding-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.payroll {
+  border-top: 2px solid #000;
+  background: #f2f2f2;
+  padding: 6px 8px 8px;
+}
+
+.payrollTitle {
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.payrollGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.blankLine {
+  border-bottom: 1px solid #000;
+  height: 16px;
+}
+
+.cert {
+  font-size: 8px;
+  padding: 5px 8px 0;
+}
+
+.empty {
+  color: transparent;
+}
