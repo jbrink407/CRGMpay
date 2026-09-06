@@ -3,6 +3,7 @@ import test from "node:test";
 import { STARTER_CODES, findCode } from "./job-codes";
 import {
   applyWeekEnding,
+  createBlankSheet,
   createSampleSheet,
   formatUSDate,
   lineAmount,
@@ -57,4 +58,11 @@ test("changing week ending updates auto dates", () => {
   const next = applyWeekEnding(sheet, "2026-09-05");
   assert.equal(next.days.monday[0].date, "2026-08-31");
   assert.equal(next.days.monday[0].customer, "Henderson");
+});
+
+test("blank weekday rows use stable ids", () => {
+  const first = createBlankSheet();
+  const second = createBlankSheet();
+  assert.equal(first.days.monday[0].id, second.days.monday[0].id);
+  assert.equal(first.days.monday[0].id, "monday-0");
 });

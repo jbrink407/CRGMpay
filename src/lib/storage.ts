@@ -23,7 +23,11 @@ export function loadDraft(): PaySheet | null {
     for (const day of WEEKDAYS) {
       days[day] = parsed.days?.[day]?.length
         ? parsed.days[day]
-        : emptyDay(4, weekdayDate(parsed.weekEnding || blank.weekEnding, day));
+        : emptyDay(
+            4,
+            weekdayDate(parsed.weekEnding || blank.weekEnding, day),
+            day,
+          );
     }
     return {
       ...blank,

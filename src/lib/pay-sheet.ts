@@ -79,8 +79,11 @@ export function emptyJob(partial: Partial<JobLine> = {}): JobLine {
   };
 }
 
-export function emptyDay(count = 4, date = ""): JobLine[] {
-  return Array.from({ length: count }, () => emptyJob({ date }));
+export function emptyDay(count = 4, date = "", key = ""): JobLine[] {
+  const prefix = key || date || "row";
+  return Array.from({ length: count }, (_, index) =>
+    emptyJob({ id: `${prefix}-${index}`, date }),
+  );
 }
 
 export function toISODate(date: Date): string {
@@ -207,7 +210,7 @@ export function createBlankSheet(): PaySheet {
   const weekEnding = lastSaturday();
   const days = {} as Record<Weekday, JobLine[]>;
   for (const day of WEEKDAYS) {
-    days[day] = emptyDay(4, weekdayDate(weekEnding, day));
+    days[day] = emptyDay(4, weekdayDate(weekEnding, day), day);
   }
   return {
     installerName: "",
