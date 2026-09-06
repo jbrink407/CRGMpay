@@ -2,6 +2,8 @@
 
 A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
 
+Live: [crgmpay.onrender.com](https://crgmpay.onrender.com)
+
 The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, weekly total on the last day worked, and the policy footer. There is one page per day, Monday through Sunday.
 
 Add lines as work happens. Each week is saved on this device, so Monday’s jobs are still there on Thursday.
@@ -38,32 +40,11 @@ Source: [github.com/jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay) (`m
 
 ## Deploy on Render
 
-CRGM Pay is a Next.js **Web Service** (not a static site). Render builds with `npm ci && npm run build` and starts with `npm start`, which listens on `0.0.0.0` and `$PORT`.
+Production is [crgmpay.onrender.com](https://crgmpay.onrender.com). It is a Next.js **Web Service** (`render.yaml`): `npm ci && npm run build`, then `npm start` on `0.0.0.0` / `$PORT`.
 
-### Option A — Blueprint (uses `render.yaml`)
+Pushes to `main` on GitHub redeploy. No env secrets or database. Payroll drafts stay in the browser’s localStorage.
 
-1. Open [Render Blueprints](https://dashboard.render.com/blueprints) and connect [jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay).
-2. Apply the Blueprint. It creates a web service named `crgm-pay` on Node 22.
-3. When the deploy is live, open the `*.onrender.com` URL.
-
-### Option B — New Web Service
-
-1. In the [Render dashboard](https://dashboard.render.com/), **New → Web Service**.
-2. Connect [jbrink407/CRGMpay](https://github.com/jbrink407/CRGMpay) and select branch `main`.
-3. Use these settings:
-
-| Setting | Value |
-| --- | --- |
-| Language | Node |
-| Node version | 22 (`NODE_VERSION=22.14.0` or `.node-version`) |
-| Build command | `npm ci && npm run build` |
-| Start command | `npm start` |
-
-4. Create the service. No env secrets are required.
-
-Free/starter instances on Render can sleep after idle time; the first request after sleep may take a minute.
-
-There is no database and no login. Payroll drafts still save in each browser’s localStorage, not on the server.
+Free/starter instances can sleep after idle time; the first request after sleep may take a minute.
 
 ## Filling a week
 
