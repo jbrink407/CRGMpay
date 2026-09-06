@@ -2,15 +2,15 @@ import { STARTER_CODES, type PieceCode } from "./job-codes";
 import {
   WEEKDAYS,
   ensureSheet,
-  saturdayOfWeek,
+  sundayOfWeek,
   weeklyTotal,
   type PaySheet,
   type Weekday,
 } from "@/lib/pay-sheet";
 
 const DRAFT_KEY = "crgmpay:draft:v4";
-const WEEKS_KEY = "crgmpay:weeks:v5";
-const CURRENT_KEY = "crgmpay:current:v5";
+const WEEKS_KEY = "crgmpay:weeks:v6";
+const CURRENT_KEY = "crgmpay:current:v6";
 const CODES_KEY = "crgmpay:codes:v2";
 
 export interface WeekSummary {
@@ -30,29 +30,55 @@ function loadWeekMap(): Record<string, WeekRecord> {
   if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(WEEKS_KEY);
-    if (!raw) return migrateLegacyDraft();
-    const parsed = JSON.parse(raw) as Record<string, WeekRecord>;
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed;
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, WeekRecord>;
+      if (parsed && typeof parsed === "object") return parsed;
+    }
   } catch {
-    return {};
+    // fall through to migrate
   }
+  return migrateLegacyWeeks();
 }
 
-function migrateLegacyDraft(): Record<string, WeekRecord> {
+function migrateLegacyWeeks(): Record<string, WeekRecord> {
+  const map: Record<string, WeekRecord> = {};
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as PaySheet;
-    const sheet = ensureSheet(parsed);
-    const record = { sheet, updatedAt: Date.now() };
-    const map = { [sheet.weekEnding]: record };
-    localStorage.setItem(WEEKS_KEY, JSON.stringify(map));
-    localStorage.setItem(CURRENT_KEY, sheet.weekEnding);
-    return map;
+    const legacyWeeks = localStorage.getItem("crgmpay:weeks:v5");
+    if (legacyWeeks) {
+      const parsed = JSON.parse(legacyWeeks) as Record<string, WeekRecord>;
+      for (const record of Object.values(parsed || {})) {
+        const sheet = ensureSheet(record.sheet);
+        map[sheet.weekEnding] = {
+          sheet,
+          updatedAt: record.updatedAt || Date.now(),
+        };
+      }
+    }
   } catch {
-    return {};
+    // ignore
   }
+  if (Object.keys(map).length === 0) {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const sheet = ensureSheet(JSON.parse(raw) as PaySheet);
+        map[sheet.weekEnding] = { sheet, updatedAt: Date.now() };
+      }
+    } catch {
+      return {};
+    }
+  }
+  if (Object.keys(map).length) {
+    localStorage.setItem(WEEKS_KEY, JSON.stringify(map));
+    const current =
+      localStorage.getItem("crgmpay:current:v5") ||
+      Object.values(map).sort((a, b) => b.updatedAt - a.updatedAt)[0]?.sheet
+        .weekEnding;
+    if (current) {
+      localStorage.setItem(CURRENT_KEY, sundayOfWeek(current));
+    }
+  }
+  return map;
 }
 
 export function loadDraft(): PaySheet | null {
@@ -106,7 +132,7 @@ export function openOrCreateWeek(
   return ensureSheet({
     installerName: names.installerName,
     helperName: names.helperName,
-    weekEnding: saturdayOfWeek(weekEnding) || weekEnding,
+    weekEnding: sundayOfWeek(weekEnding) || weekEnding,
   });
 }
 

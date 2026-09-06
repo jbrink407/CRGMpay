@@ -131,7 +131,7 @@ export function PaySheetForm({
               placeholder="Joshua Brinker"
             />
           </Field>
-          <Field label="Week ending (Saturday)">
+          <Field label="Week ending (Sunday)">
             <Input
               type="date"
               value={sheet.weekEnding}
@@ -169,7 +169,7 @@ export function PaySheetForm({
           <div>
             <h2 className="font-heading text-sm font-medium">Piece work</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              One page per day, including Saturday and Sunday. Fill a few lines
+              One page per day, Monday through Sunday. Fill a few lines
               now and the rest later — nothing is lost when you close the tab.
             </p>
           </div>

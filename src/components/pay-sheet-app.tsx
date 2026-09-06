@@ -11,9 +11,9 @@ import {
   createSampleSheet,
   formatMoney,
   formatUSDate,
-  nextSaturday,
+  nextSunday,
   pdfFilename,
-  saturdayOfWeek,
+  sundayOfWeek,
   sheetHasWork,
   toISODate,
   weekdayFromIso,
@@ -96,7 +96,7 @@ export function PaySheetApp() {
       return;
     }
     saveDraft(sheet);
-    const next = openOrCreateWeek(nextSaturday(sheet.weekEnding), {
+    const next = openOrCreateWeek(nextSunday(sheet.weekEnding), {
       installerName: sheet.installerName,
       helperName: sheet.helperName,
     });
@@ -123,7 +123,7 @@ export function PaySheetApp() {
 
   function handleWeekEnding(raw: string) {
     if (!raw) return;
-    const ending = saturdayOfWeek(raw);
+    const ending = sundayOfWeek(raw);
     if (ending === sheet.weekEnding) return;
     saveDraft(sheet);
     const next = openOrCreateWeek(ending, {
@@ -302,7 +302,7 @@ export function PaySheetApp() {
                   day={day}
                   page={WEEKDAYS.indexOf(day) + 1}
                   pages={WEEKDAYS.length}
-                  showWeeklyTotal={day === "saturday"}
+                  showWeeklyTotal={day === "sunday"}
                 />
               </FitPreview>
             </div>
@@ -324,7 +324,7 @@ export function PaySheetApp() {
               day={item}
               page={index + 1}
               pages={WEEKDAYS.length}
-              showWeeklyTotal={item === "saturday"}
+              showWeeklyTotal={item === "sunday"}
             />
           </div>
         ))}

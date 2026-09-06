@@ -5,13 +5,13 @@ import {
 } from "./job-codes";
 
 export const WEEKDAYS = [
-  "sunday",
   "monday",
   "tuesday",
   "wednesday",
   "thursday",
   "friday",
   "saturday",
+  "sunday",
 ] as const;
 
 export type Weekday = (typeof WEEKDAYS)[number];
@@ -36,15 +36,15 @@ export const WEEKDAY_SHORT: Record<Weekday, string> = {
   saturday: "Sat",
 };
 
-/** Sun–Sat payroll week; Saturday is week ending. */
+/** Mon–Sun payroll week; Sunday is week ending. */
 const WEEKDAY_OFFSET: Record<Weekday, number> = {
-  sunday: 6,
-  monday: 5,
-  tuesday: 4,
-  wednesday: 3,
-  thursday: 2,
-  friday: 1,
-  saturday: 0,
+  monday: 6,
+  tuesday: 5,
+  wednesday: 4,
+  thursday: 3,
+  friday: 2,
+  saturday: 1,
+  sunday: 0,
 };
 
 export const WEEKEND_DAYS: Weekday[] = ["sunday", "saturday"];
@@ -129,31 +129,30 @@ export function parseISODate(iso: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
-export function lastSaturday(from = new Date()): string {
+export function lastSunday(from = new Date()): string {
   const date = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-  const delta = (date.getDay() + 1) % 7;
-  date.setDate(date.getDate() - delta);
+  date.setDate(date.getDate() - date.getDay());
   return toISODate(date);
 }
 
-export function nextSaturday(weekEnding: string): string {
-  const date = parseISODate(saturdayOfWeek(weekEnding));
-  if (!date) return lastSaturday();
+export function nextSunday(weekEnding: string): string {
+  const date = parseISODate(sundayOfWeek(weekEnding));
+  if (!date) return lastSunday();
   date.setDate(date.getDate() + 7);
   return toISODate(date);
 }
 
-/** Saturday on or after this date in the Sun–Sat payroll week. */
-export function saturdayOfWeek(iso: string): string {
+/** Sunday on or after this date in the Mon–Sun payroll week. */
+export function sundayOfWeek(iso: string): string {
   const date = parseISODate(iso);
-  if (!date) return lastSaturday();
-  date.setDate(date.getDate() + ((6 - date.getDay() + 7) % 7));
+  if (!date) return lastSunday();
+  date.setDate(date.getDate() + ((7 - date.getDay()) % 7));
   return toISODate(date);
 }
 
-/** Week ending is Saturday; Sunday–Friday are the six days before it. */
+/** Week ending is Sunday; Monday–Saturday are the six days before it. */
 export function weekdayDate(weekEnding: string, day: Weekday): string {
-  const end = parseISODate(weekEnding) ?? parseISODate(lastSaturday())!;
+  const end = parseISODate(weekEnding) ?? parseISODate(lastSunday())!;
   const date = new Date(end);
   date.setDate(end.getDate() - WEEKDAY_OFFSET[day]);
   return toISODate(date);
@@ -250,7 +249,9 @@ export function sheetHasWork(sheet: PaySheet): boolean {
 
 export function ensureSheet(partial: Partial<PaySheet> | null | undefined): PaySheet {
   const blank = createBlankSheet();
-  const weekEnding = partial?.weekEnding || blank.weekEnding;
+  const weekEnding = sundayOfWeek(
+    partial?.weekEnding || blank.weekEnding,
+  );
   const days = { ...blank.days };
   for (const day of WEEKDAYS) {
     const rows = partial?.days?.[day];
@@ -281,7 +282,7 @@ export function pdfFilename(sheet: PaySheet): string {
 }
 
 export function createBlankSheet(): PaySheet {
-  const weekEnding = lastSaturday();
+  const weekEnding = lastSunday();
   const days = {} as Record<Weekday, JobLine[]>;
   for (const day of WEEKDAYS) {
     days[day] = emptyDay(4, weekdayDate(weekEnding, day), day);
@@ -295,15 +296,16 @@ export function createBlankSheet(): PaySheet {
 }
 
 export function applyWeekEnding(sheet: PaySheet, weekEnding: string): PaySheet {
+  const ending = sundayOfWeek(weekEnding);
   const days = { ...sheet.days };
   for (const day of WEEKDAYS) {
     const previous = weekdayDate(sheet.weekEnding, day);
-    const next = weekdayDate(weekEnding, day);
-    days[day] = days[day].map((line) =>
+    const next = weekdayDate(ending, day);
+    days[day] = (days[day] ?? []).map((line) =>
       !line.date || line.date === previous ? { ...line, date: next } : line,
     );
   }
-  return { ...sheet, weekEnding, days };
+  return { ...sheet, weekEnding: ending, days };
 }
 
 export function createSampleSheet(codes: PieceCode[] = STARTER_CODES): PaySheet {

@@ -8,10 +8,10 @@ import {
   ensureSheet,
   formatUSDate,
   lineAmount,
-  nextSaturday,
+  nextSunday,
   pageTotal,
   pdfFilename,
-  saturdayOfWeek,
+  sundayOfWeek,
   weeklyTotal,
   weekdayDate,
 } from "./pay-sheet";
@@ -50,17 +50,17 @@ test("piece line is qty times rate", () => {
   );
 });
 
-test("week ending Saturday maps Sunday–Saturday", () => {
-  assert.equal(weekdayDate("2026-09-05", "sunday"), "2026-08-30");
-  assert.equal(weekdayDate("2026-09-05", "monday"), "2026-08-31");
-  assert.equal(weekdayDate("2026-09-05", "friday"), "2026-09-04");
-  assert.equal(weekdayDate("2026-09-05", "saturday"), "2026-09-05");
-  assert.equal(formatUSDate("2026-09-05"), "9/5/2026");
+test("week ending Sunday maps Monday–Sunday", () => {
+  assert.equal(weekdayDate("2026-09-06", "monday"), "2026-08-31");
+  assert.equal(weekdayDate("2026-09-06", "friday"), "2026-09-04");
+  assert.equal(weekdayDate("2026-09-06", "saturday"), "2026-09-05");
+  assert.equal(weekdayDate("2026-09-06", "sunday"), "2026-09-06");
+  assert.equal(formatUSDate("2026-09-06"), "9/6/2026");
 });
 
 test("changing week ending updates auto dates", () => {
   const sheet = createSampleSheet();
-  const next = applyWeekEnding(sheet, "2026-09-05");
+  const next = applyWeekEnding(sheet, "2026-09-06");
   assert.equal(next.days.monday[0].date, "2026-08-31");
   assert.equal(next.days.monday[0].customer, "Henderson");
 });
@@ -83,11 +83,13 @@ test("older drafts without weekend days still load", () => {
       monday: [],
     } as never,
   });
-  assert.equal(sheet.days.sunday[0].date, "2026-08-30");
+  assert.equal(sheet.days.monday[0].date, "2026-08-31");
   assert.equal(sheet.days.saturday[0].date, "2026-09-05");
+  assert.equal(sheet.days.sunday[0].date, "2026-09-06");
+  assert.equal(sheet.weekEnding, "2026-09-06");
 });
 
-test("saturday of week and next saturday", () => {
-  assert.equal(saturdayOfWeek("2026-09-02"), "2026-09-05");
-  assert.equal(nextSaturday("2026-09-05"), "2026-09-12");
+test("sunday of week and next sunday", () => {
+  assert.equal(sundayOfWeek("2026-09-02"), "2026-09-06");
+  assert.equal(nextSunday("2026-09-06"), "2026-09-13");
 });
