@@ -105,9 +105,7 @@ export function PaySheetDocument({
                 {line.qty || line.rate ? formatMoney(lineAmount(line), true) : ""}
               </td>
               <td colSpan={3}>{line.comments}</td>
-              <td>
-                <div className={styles.box} />
-              </td>
+              <td className={styles.approval} />
             </tr>
           ))}
           <tr>

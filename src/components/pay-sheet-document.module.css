@@ -161,15 +161,6 @@
   white-space: nowrap;
 }
 
-.box {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #000;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8pt;
-  font-weight: 700;
-  line-height: 1;
+.approval {
+  text-align: center;
 }

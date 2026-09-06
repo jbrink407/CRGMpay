@@ -200,20 +200,29 @@ export function PaySheetApp() {
     <div className="min-h-full bg-[#ece7de] text-[#1c1915]">
       <header className="app-chrome sticky top-0 z-20 border-b border-[#d7d0c4] bg-[#ece7de]/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1700px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[11px] font-medium tracking-[0.18em] text-[#6f675c] uppercase">
-              CRGM Pay
-            </p>
-            <h1 className="font-heading text-lg leading-tight">
-              Payroll detail log
-            </h1>
-            <p className="mt-0.5 text-xs text-[#6f675c]">
-              {savedAt
-                ? `Saved on this device · ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-                : ready
-                  ? "Saves on this device as you type"
-                  : "Loading…"}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src="/construction-resources-logo.png"
+              alt="Construction Resources"
+              width={659}
+              height={656}
+              className="h-12 w-auto shrink-0 sm:h-16"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium tracking-[0.18em] text-[#e35756] uppercase">
+                CRGM Pay
+              </p>
+              <h1 className="font-heading text-lg leading-tight">
+                Payroll detail log
+              </h1>
+              <p className="mt-0.5 text-xs text-[#6f675c]">
+                {savedAt
+                  ? `Saved on this device · ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                  : ready
+                    ? "Saves on this device as you type"
+                    : "Loading…"}
+              </p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={handleNew} disabled={!ready}>

@@ -22,7 +22,7 @@ const sheetFont = Roboto_Condensed({
 export const metadata: Metadata = {
   title: "CRGM Pay — Payroll detail log",
   description:
-    "Fill the corporate payroll detail log and print a landscape PDF that matches the company pay sheet.",
+    "Fill the Construction Resources payroll detail log and print a landscape PDF that matches the company pay sheet.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
