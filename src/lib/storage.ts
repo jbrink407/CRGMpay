@@ -1,4 +1,4 @@
-import { STARTER_CODES, type PieceCode } from "@/lib/job-codes";
+import { STARTER_CODES, type PieceCode } from "./job-codes";
 import {
   WEEKDAYS,
   createBlankSheet,
@@ -8,8 +8,8 @@ import {
   type Weekday,
 } from "@/lib/pay-sheet";
 
-const DRAFT_KEY = "crgmpay:draft:v3";
-const CODES_KEY = "crgmpay:codes";
+const DRAFT_KEY = "crgmpay:draft:v4";
+const CODES_KEY = "crgmpay:codes:v2";
 
 export function loadDraft(): PaySheet | null {
   if (typeof window === "undefined") return null;

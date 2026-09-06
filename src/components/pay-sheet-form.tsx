@@ -7,12 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   emptyCode,
   parseCodeCsv,
+  STARTER_CODES,
   type PieceCode,
 } from "@/lib/job-codes";
 import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   applyCodeToLine,
+  applyWeekEnding,
   emptyJob,
   formatMoney,
   lineAmount,
@@ -123,7 +125,9 @@ export function PaySheetForm({
             <Input
               type="date"
               value={sheet.weekEnding}
-              onChange={(event) => patch({ weekEnding: event.target.value })}
+              onChange={(event) =>
+                onChange(applyWeekEnding(sheet, event.target.value))
+              }
             />
           </Field>
         </div>
@@ -224,6 +228,10 @@ export function PaySheetForm({
                       }
                     >
                       <option value="">Labor code</option>
+                      {line.code &&
+                      !codes.some((item) => item.code === line.code) ? (
+                        <option value={line.code}>{line.code}</option>
+                      ) : null}
                       {codes.map((item) => (
                         <option key={item.code} value={item.code}>
                           {item.code} · {formatMoney(item.rate)}
@@ -336,6 +344,10 @@ export function PaySheetForm({
                     }
                   >
                     <option value="">Labor code</option>
+                    {line.code &&
+                    !codes.some((item) => item.code === line.code) ? (
+                      <option value={line.code}>{line.code}</option>
+                    ) : null}
                     {codes.map((item) => (
                       <option key={item.code} value={item.code}>
                         {item.code} · {formatMoney(item.rate)}
@@ -460,7 +472,7 @@ export function PaySheetForm({
             </tbody>
           </table>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <Button
             type="button"
             size="sm"
@@ -469,6 +481,14 @@ export function PaySheetForm({
           >
             <Plus />
             Add code
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onCodesChange(STARTER_CODES)}
+          >
+            Restore company list
           </Button>
         </div>
         <div className="mt-4 grid gap-2">

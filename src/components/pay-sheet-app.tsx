@@ -44,14 +44,16 @@ export function PaySheetApp() {
   const skipHydrate = useRef(false);
 
   useEffect(() => {
-    if (skipHydrate.current) {
-      setReady(true);
-      return;
-    }
     const draft = loadDraft();
-    setCodes(loadCodes());
-    setSheet(draft ?? createBlankSheet());
-    setReady(true);
+    const storedCodes = loadCodes();
+    const id = window.setTimeout(() => {
+      setCodes(storedCodes);
+      if (!skipHydrate.current) {
+        setSheet(draft ?? createBlankSheet());
+      }
+      setReady(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -76,8 +78,10 @@ export function PaySheetApp() {
   }
 
   function handleSample() {
-    const sample = createSampleSheet(codes);
-    updateSheet(sample);
+    skipHydrate.current = true;
+    setCodes(STARTER_CODES);
+    const sample = createSampleSheet(STARTER_CODES);
+    setSheet(sample);
     setDay("monday");
     setError(null);
     setNotice(
@@ -142,19 +146,19 @@ export function PaySheetApp() {
             </h1>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={handleNew}>
+            <Button type="button" variant="outline" onClick={handleNew} disabled={!ready}>
               <RotateCcw />
               New week
             </Button>
-            <Button type="button" variant="outline" onClick={handleSample}>
+            <Button type="button" variant="outline" onClick={handleSample} disabled={!ready}>
               <FileSpreadsheet />
               Load sample
             </Button>
-            <Button type="button" variant="outline" onClick={handlePrint}>
+            <Button type="button" variant="outline" onClick={handlePrint} disabled={!ready}>
               <Printer />
               Print
             </Button>
-            <Button type="button" onClick={handlePdf} disabled={busy}>
+            <Button type="button" onClick={handlePdf} disabled={busy || !ready}>
               <Download />
               {busy ? "Building PDF…" : "Download PDF"}
             </Button>
@@ -197,6 +201,7 @@ export function PaySheetApp() {
           ) : null}
 
           <div className={tab === "edit" ? "block" : "hidden xl:block"}>
+          {ready ? (
             <PaySheetForm
               sheet={sheet}
               codes={codes}
@@ -205,6 +210,11 @@ export function PaySheetApp() {
               onChange={updateSheet}
               onCodesChange={setCodes}
             />
+          ) : (
+            <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
+              Loading draft…
+            </p>
+          )}
           </div>
         </div>
 

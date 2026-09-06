@@ -2,7 +2,7 @@ import {
   findCode,
   STARTER_CODES,
   type PieceCode,
-} from "@/lib/job-codes";
+} from "./job-codes";
 
 export const WEEKDAYS = [
   "monday",
@@ -215,6 +215,18 @@ export function createBlankSheet(): PaySheet {
     weekEnding,
     days,
   };
+}
+
+export function applyWeekEnding(sheet: PaySheet, weekEnding: string): PaySheet {
+  const days = { ...sheet.days };
+  for (const day of WEEKDAYS) {
+    const previous = weekdayDate(sheet.weekEnding, day);
+    const next = weekdayDate(weekEnding, day);
+    days[day] = days[day].map((line) =>
+      !line.date || line.date === previous ? { ...line, date: next } : line,
+    );
+  }
+  return { ...sheet, weekEnding, days };
 }
 
 export function createSampleSheet(codes: PieceCode[] = STARTER_CODES): PaySheet {

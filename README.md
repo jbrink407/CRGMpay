@@ -2,7 +2,7 @@
 
 A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
 
-The printed page follows `CR Pay Sheet.xlsx`: one log per weekday (Monday–Friday), piece-rate lines, labor-code lookup, page total, Friday weekly total, and the policy footer.
+The printed page follows `data/CR Pay Sheet.xlsx`: one landscape log per weekday (Monday–Friday), piece-rate lines, labor-code lookup, page total, Friday weekly total, and the policy footer.
 
 Data entry stays in a normal form. Totals calculate as you type.
 

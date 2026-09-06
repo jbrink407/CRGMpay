@@ -2,7 +2,6 @@ import styles from "@/components/pay-sheet-document.module.css";
 import {
   POLICY_FOOTER,
   POLICY_LINES,
-  WEEKDAY_LABELS,
   formatMoney,
   formatQty,
   formatRate,
@@ -38,20 +37,20 @@ export function PaySheetDocument({
     <div className={styles.page}>
       <table className={styles.sheet}>
         <colgroup>
-          <col style={{ width: "9%" }} />
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "9%" }} />
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "3%" }} />
-          <col style={{ width: "3%" }} />
-          <col style={{ width: "4%" }} />
+          <col style={{ width: "7.4%" }} />
+          <col style={{ width: "8.4%" }} />
+          <col style={{ width: "10.4%" }} />
+          <col style={{ width: "6.8%" }} />
+          <col style={{ width: "7.6%" }} />
+          <col style={{ width: "7.5%" }} />
+          <col style={{ width: "8.0%" }} />
+          <col style={{ width: "3.5%" }} />
+          <col style={{ width: "7.9%" }} />
+          <col style={{ width: "8.6%" }} />
+          <col style={{ width: "6.4%" }} />
+          <col style={{ width: "6.0%" }} />
+          <col style={{ width: "5.2%" }} />
+          <col style={{ width: "6.2%" }} />
         </colgroup>
         <tbody>
           <tr>
@@ -61,10 +60,11 @@ export function PaySheetDocument({
             <td className={`${styles.title} ${styles.thick}`} colSpan={6} rowSpan={2}>
               PAYROLL DETAIL LOG
             </td>
-            <td className={`${styles.bold} ${styles.thick}`}>Week Ending:</td>
-            <td className={`${styles.center} ${styles.thick}`} colSpan={4}>
+            <td className={`${styles.weekEndingLabel} ${styles.thick}`}>
+              Week Ending:
+            </td>
+            <td className={`${styles.weekEndingValue} ${styles.thick}`} colSpan={4}>
               {formatUSDate(sheet.weekEnding)}
-              {sheet.weekEnding ? `  (${WEEKDAY_LABELS[day]})` : ""}
             </td>
           </tr>
           <tr>
@@ -110,12 +110,12 @@ export function PaySheetDocument({
             </tr>
           ))}
           <tr>
-            <td colSpan={8} />
+            <td className={styles.pageTotalPad} colSpan={8} />
             <td className={styles.pageTotalLabel}>PAGE TOTAL</td>
             <td className={styles.pageTotalValue}>
               {formatMoney(total)}
             </td>
-            <td colSpan={4} />
+            <td className={styles.pageTotalPad} colSpan={4} />
           </tr>
           <tr className={styles.rules}>
             <td colSpan={9}>{POLICY_LINES[0]}</td>

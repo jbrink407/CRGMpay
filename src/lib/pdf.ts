@@ -66,6 +66,9 @@ async function captureElement(
         color: #000000;
       }
       * { box-sizing: border-box; }
+      html, body, table, td, th, div {
+        font-family: "Aptos Narrow", "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+      }
       ${css}
     </style>
   </head>
@@ -78,8 +81,11 @@ async function captureElement(
   await waitForPaint();
 
   try {
+    if (iframeDoc.fonts?.ready) {
+      await iframeDoc.fonts.ready;
+    }
     const canvas = await html2canvas(iframeDoc.body, {
-      scale: 2,
+      scale: 1.6,
       backgroundColor: "#ffffff",
       useCORS: true,
       logging: false,
@@ -88,7 +94,7 @@ async function captureElement(
       windowWidth: iframeDoc.body.scrollWidth,
       windowHeight: iframeDoc.body.scrollHeight,
     });
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
     const imageHeight = (canvas.height / canvas.width) * pageWidth;
     const height = Math.min(imageHeight, pageHeight);
     const width =
@@ -115,6 +121,7 @@ function collectMatchingCss(element: HTMLElement): string {
     add((node as HTMLElement).className?.toString?.() ?? "");
   });
 
+  const fontFaces: string[] = [];
   const rules: string[] = [];
   for (const sheet of Array.from(document.styleSheets)) {
     let cssRules: CSSRuleList;
@@ -124,6 +131,10 @@ function collectMatchingCss(element: HTMLElement): string {
       continue;
     }
     for (const rule of Array.from(cssRules)) {
+      if (rule instanceof CSSFontFaceRule) {
+        fontFaces.push(rule.cssText);
+        continue;
+      }
       if (!(rule instanceof CSSStyleRule)) continue;
       for (const className of classes) {
         if (className && rule.selectorText.includes(className)) {
@@ -133,7 +144,7 @@ function collectMatchingCss(element: HTMLElement): string {
       }
     }
   }
-  return rules.join("\n");
+  return `${fontFaces.join("\n")}\n${rules.join("\n")}`;
 }
 
 function waitForPaint() {
