@@ -62,7 +62,7 @@ export async function downloadElementPdf(
       windowHeight: iframeDoc.body.scrollHeight,
     });
 
-    const image = canvas.toDataURL("image/png");
+    const image = canvas.toDataURL("image/jpeg", 0.86);
     const pdf = new jsPDF({
       unit: "in",
       format: "letter",
@@ -73,11 +73,25 @@ export async function downloadElementPdf(
     const imageHeight = (canvas.height / canvas.width) * pageWidth;
 
     if (imageHeight <= pageHeight + 0.05) {
-      pdf.addImage(image, "PNG", 0, 0, pageWidth, Math.min(imageHeight, pageHeight));
+      pdf.addImage(
+        image,
+        "JPEG",
+        0,
+        0,
+        pageWidth,
+        Math.min(imageHeight, pageHeight),
+      );
     } else {
       const ratio = pageHeight / imageHeight;
       const width = pageWidth * ratio;
-      pdf.addImage(image, "PNG", (pageWidth - width) / 2, 0, width, pageHeight);
+      pdf.addImage(
+        image,
+        "JPEG",
+        (pageWidth - width) / 2,
+        0,
+        width,
+        pageHeight,
+      );
     }
 
     pdf.save(filename);
