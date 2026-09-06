@@ -247,6 +247,17 @@ export function sheetHasWork(sheet: PaySheet): boolean {
   );
 }
 
+/** Last Mon–Sun day with piece work; Sunday if the week is still empty. */
+export function lastWorkedDay(sheet: PaySheet): Weekday {
+  for (let index = WEEKDAYS.length - 1; index >= 0; index -= 1) {
+    const day = WEEKDAYS[index];
+    if ((sheet.days[day] ?? []).some((line) => jobHasContent(line))) {
+      return day;
+    }
+  }
+  return "sunday";
+}
+
 export function ensureSheet(partial: Partial<PaySheet> | null | undefined): PaySheet {
   const blank = createBlankSheet();
   const weekEnding = sundayOfWeek(

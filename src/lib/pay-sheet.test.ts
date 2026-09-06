@@ -7,6 +7,7 @@ import {
   createSampleSheet,
   ensureSheet,
   formatUSDate,
+  lastWorkedDay,
   lineAmount,
   nextSunday,
   pageTotal,
@@ -92,4 +93,12 @@ test("older drafts without weekend days still load", () => {
 test("sunday of week and next sunday", () => {
   assert.equal(sundayOfWeek("2026-09-02"), "2026-09-06");
   assert.equal(nextSunday("2026-09-06"), "2026-09-13");
+});
+
+test("weekly total prints on the last day with work", () => {
+  const sample = createSampleSheet();
+  assert.equal(lastWorkedDay(sample), "saturday");
+  sample.days.saturday = [];
+  assert.equal(lastWorkedDay(sample), "wednesday");
+  assert.equal(lastWorkedDay(createBlankSheet()), "sunday");
 });

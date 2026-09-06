@@ -2,14 +2,14 @@
 
 A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
 
-The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, Sunday weekly total, and the policy footer. There is one page per day, Monday through Sunday.
+The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, weekly total on the last day worked, and the policy footer. There is one page per day, Monday through Sunday.
 
 Add lines as work happens. Each week is saved on this device, so Monday’s jobs are still there on Thursday.
 
 ## What it does
 
 - Installer and helper names, week ending Sunday
-- One page per day (Sun–Sat), up to 20 piece-work lines
+- One page per day (Mon–Sun), up to 20 piece-work lines
 - Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments. Mgr Apvl stays blank on the printout for handwritten initials.
 - Rate looks up from the Job Codes list (`qty × rate`)
 - **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`)

@@ -11,6 +11,7 @@ import {
   createSampleSheet,
   formatMoney,
   formatUSDate,
+  lastWorkedDay,
   nextSunday,
   pdfFilename,
   sundayOfWeek,
@@ -302,7 +303,7 @@ export function PaySheetApp() {
                   day={day}
                   page={WEEKDAYS.indexOf(day) + 1}
                   pages={WEEKDAYS.length}
-                  showWeeklyTotal={day === "sunday"}
+                  showWeeklyTotal={day === lastWorkedDay(sheet)}
                 />
               </FitPreview>
             </div>
@@ -324,7 +325,7 @@ export function PaySheetApp() {
               day={item}
               page={index + 1}
               pages={WEEKDAYS.length}
-              showWeeklyTotal={item === "sunday"}
+              showWeeklyTotal={item === lastWorkedDay(sheet)}
             />
           </div>
         ))}
