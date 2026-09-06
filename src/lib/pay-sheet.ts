@@ -78,7 +78,6 @@ export interface JobLine {
   qty: number;
   rate: number;
   comments: string;
-  mgrApproved: boolean;
 }
 
 export interface PaySheet {
@@ -105,7 +104,6 @@ export function emptyJob(partial: Partial<JobLine> = {}): JobLine {
     qty: 0,
     rate: 0,
     comments: "",
-    mgrApproved: false,
     ...partial,
   };
 }
@@ -228,8 +226,7 @@ export function jobHasContent(job: JobLine): boolean {
       job.comments ||
       job.code ||
       job.qty ||
-      job.rate ||
-      job.mgrApproved,
+      job.rate,
   );
 }
 

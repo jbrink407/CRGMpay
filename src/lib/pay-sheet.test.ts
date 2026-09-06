@@ -45,7 +45,6 @@ test("piece line is qty times rate", () => {
       qty: 2,
       rate: 10.25,
       comments: "",
-      mgrApproved: false,
     }),
     20.5,
   );

@@ -10,7 +10,7 @@ Add lines as work happens. Each week is saved on this device, so Monday’s jobs
 
 - Installer and helper names, week ending Saturday
 - One page per day (Sun–Sat), up to 20 piece-work lines
-- Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments, Mgr Apvl
+- Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments. Mgr Apvl stays blank on the printout for handwritten initials.
 - Rate looks up from the Job Codes list (`qty × rate`)
 - **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`)
 - Weekend tabs remind you of Chuck / Stacy same-day text rules

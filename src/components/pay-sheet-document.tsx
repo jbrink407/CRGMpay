@@ -106,7 +106,7 @@ export function PaySheetDocument({
               </td>
               <td colSpan={3}>{line.comments}</td>
               <td>
-                <div className={styles.box}>{line.mgrApproved ? "X" : ""}</div>
+                <div className={styles.box} />
               </td>
             </tr>
           ))}

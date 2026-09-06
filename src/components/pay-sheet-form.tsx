@@ -231,7 +231,6 @@ export function PaySheetForm({
                 <th className="pb-2 pr-2 font-medium">PC pay rate</th>
                 <th className="pb-2 pr-2 font-medium">PC pay total</th>
                 <th className="pb-2 pr-2 font-medium">Comments</th>
-                <th className="pb-2 pr-2 font-medium">Mgr</th>
                 <th className="pb-2 font-medium" />
               </tr>
             </thead>
@@ -305,19 +304,6 @@ export function PaySheetForm({
                       onChange={(event) =>
                         updateLine(line.id, { comments: event.target.value })
                       }
-                    />
-                  </td>
-                  <td className="py-1 pr-2">
-                    <input
-                      type="checkbox"
-                      className="size-4"
-                      checked={line.mgrApproved}
-                      onChange={(event) =>
-                        updateLine(line.id, {
-                          mgrApproved: event.target.checked,
-                        })
-                      }
-                      aria-label="Manager approval"
                     />
                   </td>
                   <td className="py-1">
@@ -437,17 +423,6 @@ export function PaySheetForm({
                     {formatMoney(lineAmount(line))}
                   </p>
                 </Field>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-4"
-                    checked={line.mgrApproved}
-                    onChange={(event) =>
-                      updateLine(line.id, { mgrApproved: event.target.checked })
-                    }
-                  />
-                  Mgr apvl
-                </label>
                 <div className="col-span-2">
                   <Field label="Comments">
                     <Input
