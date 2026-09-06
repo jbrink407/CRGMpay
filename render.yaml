@@ -1,0 +1,14 @@
+# Render Blueprint — connect this GitHub repo at https://dashboard.render.com/blueprints
+# Web Service: Node, bind 0.0.0.0:$PORT (see npm start).
+services:
+  - type: web
+    name: crgm-pay
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22.14.0"
+      - key: NODE_ENV
+        value: production

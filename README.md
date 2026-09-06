@@ -32,6 +32,46 @@ npm start
 
 No account or database. Drafts, saved weeks, and codes stay in the browser.
 
+## GitHub
+
+This project lives in Cursor until you create a GitHub repository.
+
+1. In the Cursor agent view, click **Create repo**.
+2. Confirm the GitHub account and repository name (for example `crgm-pay`).
+3. After the repo exists, the `main` branch here can be pushed to GitHub.
+
+Render needs a GitHub (or GitLab) repo it can access. Cursor’s Origin remote is not enough for Render.
+
+## Deploy on Render
+
+CRGM Pay is a Next.js **Web Service** (not a static site). Render builds with `npm ci && npm run build` and starts with `npm start`, which listens on `0.0.0.0` and `$PORT`.
+
+### Option A — Blueprint (uses `render.yaml`)
+
+1. Push this repo to GitHub (see above).
+2. Open [Render Blueprints](https://dashboard.render.com/blueprints) and connect the GitHub repo.
+3. Apply the Blueprint. It creates a web service named `crgm-pay` on Node 22.
+4. When the deploy is live, open the `*.onrender.com` URL.
+
+### Option B — New Web Service
+
+1. In the [Render dashboard](https://dashboard.render.com/), **New → Web Service**.
+2. Connect the GitHub repo and select branch `main`.
+3. Use these settings:
+
+| Setting | Value |
+| --- | --- |
+| Language | Node |
+| Node version | 22 (`NODE_VERSION=22.14.0` or `.node-version`) |
+| Build command | `npm ci && npm run build` |
+| Start command | `npm start` |
+
+4. Create the service. No env secrets are required.
+
+Free/starter instances on Render can sleep after idle time; the first request after sleep may take a minute.
+
+There is no database and no login. Payroll drafts still save in each browser’s localStorage, not on the server.
+
 ## Filling a week
 
 1. Enter installer and helper.

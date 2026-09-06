@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "next dev --port 43180 --hostname 127.0.0.1",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --hostname 0.0.0.0",
     "lint": "eslint",
     "test": "tsx --test src/lib/pay-sheet.test.ts"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
