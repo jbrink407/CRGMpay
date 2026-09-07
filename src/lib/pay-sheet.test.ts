@@ -5,6 +5,7 @@ import {
   applyWeekEnding,
   createBlankSheet,
   createSampleSheet,
+  daysWorked,
   ensureSheet,
   formatUSDate,
   lastWorkedDay,
@@ -12,6 +13,8 @@ import {
   nextSunday,
   pageTotal,
   pdfFilename,
+  printDays,
+  sheetPage,
   sundayOfWeek,
   weeklyTotal,
   weekdayDate,
@@ -117,4 +120,35 @@ test("weekly total prints on the last day with work", () => {
   sample.days.saturday = [];
   assert.equal(lastWorkedDay(sample), "wednesday");
   assert.equal(lastWorkedDay(createBlankSheet()), "sunday");
+});
+
+test("page numbers follow days with work, not a fixed seven", () => {
+  const sample = createSampleSheet();
+  assert.deepEqual(daysWorked(sample), [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "saturday",
+  ]);
+  assert.deepEqual(sheetPage(sample, "monday", "monday"), {
+    page: 1,
+    pages: 4,
+  });
+  assert.deepEqual(sheetPage(sample, "wednesday", "monday"), {
+    page: 3,
+    pages: 4,
+  });
+  assert.deepEqual(sheetPage(sample, "saturday", "monday"), {
+    page: 4,
+    pages: 4,
+  });
+  assert.deepEqual(sheetPage(sample, "thursday", "monday"), {
+    page: 0,
+    pages: 4,
+  });
+  assert.deepEqual(printDays(createBlankSheet(), "tuesday"), ["tuesday"]);
+  assert.deepEqual(sheetPage(createBlankSheet(), "tuesday", "tuesday"), {
+    page: 1,
+    pages: 1,
+  });
 });

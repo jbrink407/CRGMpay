@@ -4,17 +4,17 @@ A small web app for filling the Construction Resources Glass & Mirror **Payroll 
 
 Live: [crgmpay.onrender.com](https://crgmpay.onrender.com)
 
-The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, weekly total on the last day worked, and the policy footer. There is one page per day, Monday through Sunday.
+The printed page follows `data/CR Pay Sheet.xlsx`: landscape log, piece-rate lines, labor-code lookup, page total, weekly total on the last day worked, and the policy footer. There is one printed page per day that has work.
 
 Add lines as work happens. Each week is saved on this device, so Monday’s jobs are still there on Thursday.
 
 ## What it does
 
 - Installer and helper names, week ending Sunday
-- One page per day (Mon–Sun), up to 20 piece-work lines
+- One entry page per day (Mon–Sun), up to 20 piece-work lines
 - Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments. Mgr Apvl stays blank on the printout for handwritten initials.
 - Rate looks up from the Job Codes list (`qty × rate`)
-- **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`). Each day is one letter page, scaled to fit.
+- **Download PDF** is a landscape letter packet (`INSTALLER {name}.pdf`) with one page per day worked. Page numbers match that count.
 - Weekend tabs remind you of Chuck / Stacy same-day text rules
 - Job codes and builder names can be edited in collapsed lists (open to add, paste, or restore)
 
@@ -52,7 +52,7 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 2. Confirm week ending (Sunday). Changing it opens that week if you already started it.
 3. Choose a day tab and add lines: customer, address, labor code, qty.
 4. Close the laptop and come back later — the week is still there.
-5. Download PDF or print all seven pages when the week is done.
+5. Download PDF or print when the week is done. Only days with work are included.
 
 **New week** saves the current week and opens the next Sunday. **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
 

@@ -247,6 +247,32 @@ export function sheetHasWork(sheet: PaySheet): boolean {
   );
 }
 
+/** Mon–Sun days that have at least one filled piece-work line. */
+export function daysWorked(sheet: PaySheet): Weekday[] {
+  return WEEKDAYS.filter((day) =>
+    (sheet.days[day] ?? []).some((line) => jobHasContent(line)),
+  );
+}
+
+/** Days included in print/PDF. Empty week prints the day you are on. */
+export function printDays(sheet: PaySheet, fallback: Weekday): Weekday[] {
+  const days = daysWorked(sheet);
+  return days.length ? days : [fallback];
+}
+
+export function sheetPage(
+  sheet: PaySheet,
+  day: Weekday,
+  fallback: Weekday,
+): { page: number; pages: number } {
+  const days = printDays(sheet, fallback);
+  const index = days.indexOf(day);
+  return {
+    page: index >= 0 ? index + 1 : 0,
+    pages: days.length,
+  };
+}
+
 /** Last Mon–Sun day with piece work; Sunday if the week is still empty. */
 export function lastWorkedDay(sheet: PaySheet): Weekday {
   for (let index = WEEKDAYS.length - 1; index >= 0; index -= 1) {

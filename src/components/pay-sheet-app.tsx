@@ -20,6 +20,8 @@ import {
   lastWorkedDay,
   nextSunday,
   pdfFilename,
+  printDays,
+  sheetPage,
   sundayOfWeek,
   sheetHasWork,
   toISODate,
@@ -178,10 +180,11 @@ export function PaySheetApp() {
       setTab("edit");
       return;
     }
-    const pages = WEEKDAYS.map((item) => pageRefs.current[item]).filter(
-      (node): node is HTMLDivElement => Boolean(node),
-    );
-    if (pages.length !== WEEKDAYS.length) {
+    const packet = printDays(sheet, day);
+    const pages = packet
+      .map((item) => pageRefs.current[item])
+      .filter((node): node is HTMLDivElement => Boolean(node));
+    if (pages.length !== packet.length) {
       setError("Print pages are not ready yet. Try again.");
       return;
     }
@@ -190,7 +193,10 @@ export function PaySheetApp() {
     setNotice("Building PDF…");
     try {
       await downloadPagesPdf(pages, pdfFilename(sheet), "landscape");
-      setNotice(`Downloaded ${pdfFilename(sheet)} · 7 landscape letter pages`);
+      const count = packet.length;
+      setNotice(
+        `Downloaded ${pdfFilename(sheet)} · ${count} landscape letter page${count === 1 ? "" : "s"}`,
+      );
     } catch (err) {
       setNotice(null);
       setError(
@@ -213,6 +219,9 @@ export function PaySheetApp() {
     setError(null);
     window.print();
   }
+
+  const packet = printDays(sheet, day);
+  const paging = sheetPage(sheet, day, day);
 
   return (
     <div className="min-h-full min-w-0 overflow-x-clip bg-[#ece7de] text-[#1c1915]">
@@ -347,14 +356,17 @@ export function PaySheetApp() {
           <div className="xl:sticky xl:top-20">
             <p className="mb-2 hidden text-xs tracking-wide text-[#6f675c] uppercase xl:block">
               Print preview · {WEEKDAY_LABELS[day]}
+              {paging.page
+                ? ` · page ${paging.page} of ${paging.pages}`
+                : ` · not in this week’s ${paging.pages}-page packet`}
             </p>
             <div className="sheet-scroll overflow-auto rounded-xl bg-[#cfc6b6] p-2 shadow-inner xl:max-h-[calc(100vh-7rem)]">
               <FitPreview>
                 <PaySheetDocument
                   sheet={sheet}
                   day={day}
-                  page={WEEKDAYS.indexOf(day) + 1}
-                  pages={WEEKDAYS.length}
+                  page={paging.page}
+                  pages={paging.pages}
                   showWeeklyTotal={day === lastWorkedDay(sheet)}
                 />
               </FitPreview>
@@ -364,7 +376,7 @@ export function PaySheetApp() {
       </div>
 
       <div className="print-only">
-        {WEEKDAYS.map((item, index) => (
+        {packet.map((item, index) => (
           <div
             key={item}
             ref={(node) => {
@@ -376,7 +388,7 @@ export function PaySheetApp() {
               sheet={sheet}
               day={item}
               page={index + 1}
-              pages={WEEKDAYS.length}
+              pages={packet.length}
               showWeeklyTotal={item === lastWorkedDay(sheet)}
             />
           </div>

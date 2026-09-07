@@ -127,7 +127,9 @@ export function PaySheetDocument({
             <td className={`${styles.right} ${styles.pageNum}`} colSpan={1}>
               PAGE
             </td>
-            <td className={`${styles.center} ${styles.pageNum}`}>{page}</td>
+            <td className={`${styles.center} ${styles.pageNum}`}>
+              {page || ""}
+            </td>
             <td className={`${styles.center} ${styles.pageNum}`}>OF</td>
             <td className={`${styles.center} ${styles.pageNum}`}>{pages}</td>
             <td className={styles.pageNum}>PAGES</td>
