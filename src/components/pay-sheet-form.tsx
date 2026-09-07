@@ -51,6 +51,7 @@ interface PaySheetFormProps {
   onCustomersChange: (customers: Customer[]) => void;
   onWeekEndingChange: (weekEnding: string) => void;
   onOpenWeek: (weekEnding: string) => void;
+  onDeleteWeek: (weekEnding: string) => void;
 }
 
 const selectClassName =
@@ -68,6 +69,7 @@ export function PaySheetForm({
   onCustomersChange,
   onWeekEndingChange,
   onOpenWeek,
+  onDeleteWeek,
 }: PaySheetFormProps) {
   const [importText, setImportText] = useState("");
   const [importCustomers, setImportCustomers] = useState("");
@@ -188,24 +190,43 @@ export function PaySheetForm({
         </div>
         {weeks.length > 1 ? (
           <div className="mt-4">
-            <p className="text-xs text-muted-foreground">Saved weeks</p>
+            <p className="text-xs text-muted-foreground">
+              Saved weeks · tap a date to open, trash to remove from this device
+            </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {weeks.map((item) => (
-                <Button
-                  key={item.weekEnding}
-                  type="button"
-                  size="sm"
-                  variant={
-                    item.weekEnding === sheet.weekEnding ? "default" : "outline"
-                  }
-                  onClick={() => onOpenWeek(item.weekEnding)}
-                >
-                  {formatUSDate(item.weekEnding)}
-                  <span className="tabular-nums opacity-70">
-                    {formatMoney(item.total)}
-                  </span>
-                </Button>
-              ))}
+              {weeks.map((item) => {
+                const current = item.weekEnding === sheet.weekEnding;
+                const variant = current ? "default" : "outline";
+                return (
+                  <div
+                    key={item.weekEnding}
+                    className="inline-flex max-w-full items-stretch"
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={variant}
+                      className="max-md:h-11 rounded-r-none"
+                      onClick={() => onOpenWeek(item.weekEnding)}
+                    >
+                      {formatUSDate(item.weekEnding)}
+                      <span className="tabular-nums opacity-70">
+                        {formatMoney(item.total)}
+                      </span>
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant={variant}
+                      className="max-md:size-11 rounded-l-none border-l-0"
+                      aria-label={`Remove week ending ${formatUSDate(item.weekEnding)}`}
+                      onClick={() => onDeleteWeek(item.weekEnding)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : null}

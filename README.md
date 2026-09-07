@@ -54,7 +54,7 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 4. Close the laptop and come back later — the week is still there.
 5. Download PDF or print when the week is done. Only days with work are included.
 
-**New week** saves the current week and opens the next Sunday. **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
+**New week** saves the current week and opens the next Sunday. Saved weeks appear as chips under the week-ending date — open one to continue, or trash it to remove it from this device (with confirmation). **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
 
 ## Builders
 

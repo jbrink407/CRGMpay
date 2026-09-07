@@ -19,6 +19,14 @@ const CURRENT_KEY = "crgmpay:current:v6";
 const CODES_KEY = "crgmpay:codes:v2";
 const CUSTOMERS_KEY = "crgmpay:customers:v1";
 
+function hasStorage(): boolean {
+  try {
+    return typeof localStorage !== "undefined";
+  } catch {
+    return false;
+  }
+}
+
 export interface WeekSummary {
   weekEnding: string;
   installerName: string;
@@ -33,7 +41,7 @@ interface WeekRecord {
 }
 
 function loadWeekMap(): Record<string, WeekRecord> {
-  if (typeof window === "undefined") return {};
+  if (!hasStorage()) return {};
   try {
     const raw = localStorage.getItem(WEEKS_KEY);
     if (raw) {
@@ -88,7 +96,7 @@ function migrateLegacyWeeks(): Record<string, WeekRecord> {
 }
 
 export function loadDraft(): PaySheet | null {
-  if (typeof window === "undefined") return null;
+  if (!hasStorage()) return null;
   const map = loadWeekMap();
   const current = localStorage.getItem(CURRENT_KEY);
   if (current && map[current]) return ensureSheet(map[current].sheet);
@@ -97,7 +105,7 @@ export function loadDraft(): PaySheet | null {
 }
 
 export function saveDraft(sheet: PaySheet) {
-  if (typeof window === "undefined") return;
+  if (!hasStorage()) return;
   const normalized = ensureSheet(sheet);
   const map = loadWeekMap();
   map[normalized.weekEnding] = {
@@ -129,6 +137,26 @@ export function listWeeks(): WeekSummary[] {
     .sort((a, b) => b.weekEnding.localeCompare(a.weekEnding));
 }
 
+export function deleteWeek(weekEnding: string): WeekSummary[] {
+  if (!hasStorage()) return [];
+  const ending = sundayOfWeek(weekEnding) || weekEnding;
+  const map = loadWeekMap();
+  delete map[ending];
+  localStorage.setItem(WEEKS_KEY, JSON.stringify(map));
+  const current = localStorage.getItem(CURRENT_KEY);
+  if (current === ending) {
+    const next = Object.values(map)
+      .map((record) => ensureSheet(record.sheet))
+      .sort((a, b) => b.weekEnding.localeCompare(a.weekEnding))[0];
+    if (next) {
+      localStorage.setItem(CURRENT_KEY, next.weekEnding);
+    } else {
+      localStorage.removeItem(CURRENT_KEY);
+    }
+  }
+  return listWeeks();
+}
+
 export function openOrCreateWeek(
   weekEnding: string,
   names: { installerName: string; helperName: string },
@@ -143,7 +171,7 @@ export function openOrCreateWeek(
 }
 
 export function loadCodes(): PieceCode[] {
-  if (typeof window === "undefined") return STARTER_CODES;
+  if (!hasStorage()) return STARTER_CODES;
   try {
     const raw = localStorage.getItem(CODES_KEY);
     if (!raw) return STARTER_CODES;
@@ -156,12 +184,12 @@ export function loadCodes(): PieceCode[] {
 }
 
 export function saveCodes(codes: PieceCode[]) {
-  if (typeof window === "undefined") return;
+  if (!hasStorage()) return;
   localStorage.setItem(CODES_KEY, JSON.stringify(codes));
 }
 
 export function loadCustomers(): Customer[] {
-  if (typeof window === "undefined") return STARTER_CUSTOMERS;
+  if (!hasStorage()) return STARTER_CUSTOMERS;
   try {
     const raw = localStorage.getItem(CUSTOMERS_KEY);
     if (!raw) return STARTER_CUSTOMERS;
@@ -174,7 +202,7 @@ export function loadCustomers(): Customer[] {
 }
 
 export function saveCustomers(customers: Customer[]) {
-  if (typeof window === "undefined") return;
+  if (!hasStorage()) return;
   localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
 }
 

@@ -32,6 +32,7 @@ import {
 } from "@/lib/pay-sheet";
 import { downloadPagesPdf } from "@/lib/pdf";
 import {
+  deleteWeek,
   listWeeks,
   loadCodes,
   loadCustomers,
@@ -171,6 +172,31 @@ export function PaySheetApp() {
     );
     setError(null);
     setNotice(`Opened week ending ${formatUSDate(weekEnding)}.`);
+  }
+
+  function handleDeleteWeek(weekEnding: string) {
+    const label = formatUSDate(weekEnding);
+    if (
+      !window.confirm(
+        `Remove week ending ${label} from this device? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    const deletingCurrent = weekEnding === sheet.weekEnding;
+    const remaining = deleteWeek(weekEnding);
+    if (deletingCurrent) {
+      const next = loadDraft() ?? createBlankSheet();
+      updateSheet({
+        ...next,
+        installerName: next.installerName || sheet.installerName,
+        helperName: next.helperName || sheet.helperName,
+      });
+      setDay("monday");
+    }
+    setWeeks(remaining);
+    setError(null);
+    setNotice(`Removed week ending ${label} from this device.`);
   }
 
   async function handlePdf() {
@@ -343,6 +369,7 @@ export function PaySheetApp() {
                 onCustomersChange={setCustomers}
                 onWeekEndingChange={handleWeekEnding}
                 onOpenWeek={handleOpenWeek}
+                onDeleteWeek={handleDeleteWeek}
               />
             ) : (
               <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
