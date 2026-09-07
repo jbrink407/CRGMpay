@@ -1,59 +1,101 @@
 export interface PieceCode {
+  id: string;
   code: string;
   description: string;
   unit: string;
   rate: number;
 }
 
+export function newCodeId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `job-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function ensureCodeIds(
+  codes: Array<Partial<PieceCode> & { code?: string }>,
+): PieceCode[] {
+  const seen = new Set<string>();
+  return codes.map((item, index) => {
+    const code = String(item.code || "").toUpperCase();
+    const base: PieceCode = {
+      id: "",
+      code,
+      description: String(item.description || ""),
+      unit: String(item.unit || "ea"),
+      rate: Number(item.rate) || 0,
+    };
+    if (item.id && !seen.has(item.id)) {
+      seen.add(item.id);
+      return { ...base, id: item.id };
+    }
+    const fromCode = code ? `job-${code}` : `job-new-${index}`;
+    let id = fromCode;
+    let n = 2;
+    while (seen.has(id)) id = `${fromCode}-${n++}`;
+    seen.add(id);
+    return { ...base, id };
+  });
+}
+
 /**
  * Company piece-rate job codes from the CR pay sheet rate list.
  * Descriptions can be filled in later; payroll matches on code.
  */
-export const STARTER_CODES: PieceCode[] = [
-  { code: "BHL", description: "", unit: "ea", rate: 1.64 },
-  { code: "GBL", description: "", unit: "ea", rate: 8.2 },
-  { code: "BCLAB", description: "", unit: "ea", rate: 2.46 },
-  { code: "BORE", description: "", unit: "ea", rate: 10.25 },
-  { code: "DRSTLAB", description: "", unit: "ea", rate: 0.52 },
-  { code: "REKEY", description: "", unit: "ea", rate: 20.5 },
-  { code: "HSLAB", description: "", unit: "ea", rate: 4.1 },
-  { code: "ENTLAB", description: "", unit: "ea", rate: 2.46 },
-  { code: "LOCLAB", description: "", unit: "ea", rate: 1.85 },
-  { code: "KICKLAB", description: "", unit: "ea", rate: 1.85 },
-  { code: "LKHNGLAB", description: "", unit: "ea", rate: 1.22 },
-  { code: "FECLAB", description: "", unit: "ea", rate: 6.56 },
-  { code: "FEXLAB", description: "", unit: "ea", rate: 1.64 },
-  { code: "BEVIN", description: "", unit: "ea", rate: 1.64 },
-  { code: "BSMC", description: "", unit: "ea", rate: 2.46 },
-  { code: "CGL", description: "", unit: "ea", rate: 2.87 },
-  { code: "CGR", description: "", unit: "ea", rate: 4.1 },
-  { code: "COML", description: "", unit: "ea", rate: 0.74 },
-  { code: "FGL", description: "", unit: "ea", rate: 4.1 },
-  { code: "FGLR", description: "", unit: "ea", rate: 4.1 },
-  { code: "FMLC", description: "", unit: "ea", rate: 8.2 },
-  { code: "JBARLAB", description: "", unit: "ea", rate: 5.74 },
-  { code: "LITEMNT", description: "", unit: "ea", rate: 4.92 },
-  { code: "MBPLAB", description: "", unit: "ea", rate: 12.3 },
-  { code: "MCLAB", description: "", unit: "ea", rate: 6.56 },
-  { code: "OML", description: "", unit: "ea", rate: 4.1 },
-  { code: "VML", description: "", unit: "ea", rate: 0.41 },
-  { code: "CLIPSLAB", description: "", unit: "ea", rate: 8.2 },
-  { code: "VMR", description: "", unit: "ea", rate: 0.62 },
-  { code: "SIL", description: "", unit: "ea", rate: 0.48 },
-  { code: "SRL", description: "", unit: "ea", rate: 0.37 },
-  { code: "FD791LAB", description: "", unit: "ea", rate: 39.36 },
-  { code: "FD793LAB", description: "", unit: "ea", rate: 49.2 },
-  { code: "FD794LAB", description: "", unit: "ea", rate: 55.76 },
-  { code: "FDSDL", description: "", unit: "ea", rate: 39.36 },
-  { code: "FDSDR", description: "", unit: "ea", rate: 16.4 },
-  { code: "FSDL", description: "", unit: "ea", rate: 45.1 },
-  { code: "FSPL", description: "", unit: "ea", rate: 36.9 },
-  { code: "FSR", description: "", unit: "ea", rate: 20.5 },
-  { code: "STEAMLAB", description: "", unit: "ea", rate: 41.0 },
-  { code: "SWL", description: "", unit: "ea", rate: 16.4 },
-  { code: "XPANEL", description: "", unit: "ea", rate: 8.2 },
-  { code: "FDCSDLAB", description: "", unit: "ea", rate: 82.0 },
+const STARTER_RATES: [string, number][] = [
+  ["BHL", 1.64],
+  ["GBL", 8.2],
+  ["BCLAB", 2.46],
+  ["BORE", 10.25],
+  ["DRSTLAB", 0.52],
+  ["REKEY", 20.5],
+  ["HSLAB", 4.1],
+  ["ENTLAB", 2.46],
+  ["LOCLAB", 1.85],
+  ["KICKLAB", 1.85],
+  ["LKHNGLAB", 1.22],
+  ["FECLAB", 6.56],
+  ["FEXLAB", 1.64],
+  ["BEVIN", 1.64],
+  ["BSMC", 2.46],
+  ["CGL", 2.87],
+  ["CGR", 4.1],
+  ["COML", 0.74],
+  ["FGL", 4.1],
+  ["FGLR", 4.1],
+  ["FMLC", 8.2],
+  ["JBARLAB", 5.74],
+  ["LITEMNT", 4.92],
+  ["MBPLAB", 12.3],
+  ["MCLAB", 6.56],
+  ["OML", 4.1],
+  ["VML", 0.41],
+  ["CLIPSLAB", 8.2],
+  ["VMR", 0.62],
+  ["SIL", 0.48],
+  ["SRL", 0.37],
+  ["FD791LAB", 39.36],
+  ["FD793LAB", 49.2],
+  ["FD794LAB", 55.76],
+  ["FDSDL", 39.36],
+  ["FDSDR", 16.4],
+  ["FSDL", 45.1],
+  ["FSPL", 36.9],
+  ["FSR", 20.5],
+  ["STEAMLAB", 41.0],
+  ["SWL", 16.4],
+  ["XPANEL", 8.2],
+  ["FDCSDLAB", 82.0],
 ];
+
+export const STARTER_CODES: PieceCode[] = STARTER_RATES.map(([code, rate]) => ({
+  id: `job-${code}`,
+  code,
+  description: "",
+  unit: "ea",
+  rate,
+}));
 
 export function findCode(
   codes: PieceCode[],
@@ -65,6 +107,7 @@ export function findCode(
 
 export function emptyCode(partial: Partial<PieceCode> = {}): PieceCode {
   return {
+    id: newCodeId(),
     code: "",
     description: "",
     unit: "ea",
@@ -93,6 +136,7 @@ export function parseCodeCsv(text: string): PieceCode[] {
     );
     if (parts.length === 2 && looksLikeRate) {
       codes.push({
+        id: newCodeId(),
         code: code.toUpperCase(),
         description: "",
         unit: "ea",
@@ -101,6 +145,7 @@ export function parseCodeCsv(text: string): PieceCode[] {
       continue;
     }
     codes.push({
+      id: newCodeId(),
       code: code.toUpperCase(),
       description: looksLikeRate ? "" : descriptionOrRate || "",
       unit: parts.length >= 4 ? unitOrRate || "ea" : "ea",

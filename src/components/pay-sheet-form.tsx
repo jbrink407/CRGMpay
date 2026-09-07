@@ -29,7 +29,7 @@ import {
 } from "@/lib/pay-sheet";
 import { type WeekSummary } from "@/lib/storage";
 import { Plus, Trash2 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface PaySheetFormProps {
   sheet: PaySheet;
@@ -44,7 +44,7 @@ interface PaySheetFormProps {
 }
 
 const selectClassName =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm";
 
 export function PaySheetForm({
   sheet,
@@ -58,7 +58,17 @@ export function PaySheetForm({
   onOpenWeek,
 }: PaySheetFormProps) {
   const [importText, setImportText] = useState("");
+  const focusCodeId = useRef<string | null>(null);
   const lines = sheet.days[day] ?? [];
+
+  useEffect(() => {
+    const id = focusCodeId.current;
+    if (!id) return;
+    focusCodeId.current = null;
+    const node = document.getElementById(`job-code-${id}`) as HTMLInputElement | null;
+    node?.focus();
+    node?.scrollIntoView({ block: "center" });
+  }, [codes]);
 
   function patch(partial: Partial<PaySheet>) {
     onChange({ ...sheet, ...partial });
@@ -178,29 +188,34 @@ export function PaySheetForm({
               type="button"
               size="sm"
               variant="outline"
+              className="max-md:h-11"
               onClick={() => addLine(true)}
             >
               Same job, another code
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => addLine(false)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="max-md:h-11"
+              onClick={() => addLine(false)}
+            >
               <Plus />
               Add line
             </Button>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 -mx-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:thin]">
           {WEEKDAYS.map((item) => (
             <Button
               key={item}
               type="button"
               size="sm"
               variant={day === item ? "default" : "outline"}
-              className={
-                isWeekend(item) && day !== item
-                  ? "border-amber-700/40"
-                  : undefined
-              }
+              className={`shrink-0 max-md:h-11 ${
+                isWeekend(item) && day !== item ? "border-amber-700/40" : ""
+              }`}
               onClick={() => onDayChange(item)}
             >
               <span className="sm:hidden">{WEEKDAY_SHORT[item]}</span>
@@ -455,10 +470,14 @@ export function PaySheetForm({
             </thead>
             <tbody>
               {codes.map((item, index) => (
-                <tr key={`${item.code}-${index}`} className="border-t">
+                <tr key={item.id} className="border-t">
                   <td className="px-2 py-1">
                     <Input
+                      id={`job-code-${item.id}`}
                       value={item.code}
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
                       onChange={(event) =>
                         updateCode(index, {
                           code: event.target.value.toUpperCase(),
@@ -496,7 +515,12 @@ export function PaySheetForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => onCodesChange([...codes, emptyCode()])}
+            className="max-md:h-11"
+            onClick={() => {
+              const created = emptyCode();
+              focusCodeId.current = created.id;
+              onCodesChange([...codes, created]);
+            }}
           >
             <Plus />
             Add code

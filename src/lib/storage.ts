@@ -1,4 +1,4 @@
-import { STARTER_CODES, type PieceCode } from "./job-codes";
+import { STARTER_CODES, ensureCodeIds, type PieceCode } from "./job-codes";
 import {
   WEEKDAYS,
   ensureSheet,
@@ -143,12 +143,7 @@ export function loadCodes(): PieceCode[] {
     if (!raw) return STARTER_CODES;
     const parsed = JSON.parse(raw) as PieceCode[];
     if (!Array.isArray(parsed) || parsed.length === 0) return STARTER_CODES;
-    return parsed.map((item) => ({
-      code: String(item.code || "").toUpperCase(),
-      description: String(item.description || ""),
-      unit: String(item.unit || "ea"),
-      rate: Number(item.rate) || 0,
-    }));
+    return ensureCodeIds(parsed);
   } catch {
     return STARTER_CODES;
   }

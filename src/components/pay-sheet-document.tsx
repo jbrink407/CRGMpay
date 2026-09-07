@@ -35,7 +35,7 @@ export function PaySheetDocument({
   const week = showWeeklyTotal ? weeklyTotal(sheet) : 0;
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-print-root>
       <table className={styles.sheet}>
         <colgroup>
           <col style={{ width: "7.4%" }} />

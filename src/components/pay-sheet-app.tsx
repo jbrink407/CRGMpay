@@ -3,7 +3,7 @@
 import { PaySheetDocument } from "@/components/pay-sheet-document";
 import { PaySheetForm } from "@/components/pay-sheet-form";
 import { Button } from "@/components/ui/button";
-import { STARTER_CODES, type PieceCode } from "@/lib/job-codes";
+import { STARTER_CODES, ensureCodeIds, type PieceCode } from "@/lib/job-codes";
 import {
   WEEKDAYS,
   WEEKDAY_LABELS,
@@ -58,7 +58,7 @@ export function PaySheetApp() {
     const draft = loadDraft();
     const storedCodes = loadCodes();
     const id = window.setTimeout(() => {
-      setCodes(storedCodes);
+      setCodes(ensureCodeIds(storedCodes));
       if (!skipHydrate.current) {
         const next = draft ?? createBlankSheet();
         setSheet(next);
@@ -172,7 +172,7 @@ export function PaySheetApp() {
     setNotice("Building PDF…");
     try {
       await downloadPagesPdf(pages, pdfFilename(sheet), "landscape");
-      setNotice(`Downloaded ${pdfFilename(sheet)}`);
+      setNotice(`Downloaded ${pdfFilename(sheet)} · 7 landscape letter pages`);
     } catch (err) {
       setNotice(null);
       setError(
@@ -198,24 +198,24 @@ export function PaySheetApp() {
 
   return (
     <div className="min-h-full bg-[#ece7de] text-[#1c1915]">
-      <header className="app-chrome sticky top-0 z-20 border-b border-[#d7d0c4] bg-[#ece7de]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1700px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+      <header className="app-chrome sticky top-0 z-20 border-b border-[#d7d0c4] bg-[#ece7de]/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex max-w-[1700px] flex-col gap-3 px-3 py-2 sm:px-4 sm:py-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <img
               src="/construction-resources-logo.png"
               alt="Construction Resources"
               width={659}
               height={656}
-              className="h-12 w-auto shrink-0 sm:h-16"
+              className="h-10 w-auto shrink-0 sm:h-14 md:h-16"
             />
             <div className="min-w-0">
               <p className="text-[11px] font-medium tracking-[0.18em] text-[#e35756] uppercase">
                 CRGM Pay
               </p>
-              <h1 className="font-heading text-lg leading-tight">
+              <h1 className="font-heading text-base leading-tight sm:text-lg">
                 Payroll detail log
               </h1>
-              <p className="mt-0.5 text-xs text-[#6f675c]">
+              <p className="mt-0.5 hidden text-xs text-[#6f675c] min-[400px]:block">
                 {savedAt
                   ? `Saved on this device · ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
                   : ready
@@ -225,19 +225,42 @@ export function PaySheetApp() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={handleNew} disabled={!ready}>
+            <Button
+              type="button"
+              variant="outline"
+              className="max-md:h-11 max-md:flex-1"
+              onClick={handleNew}
+              disabled={!ready}
+            >
               <RotateCcw />
               New week
             </Button>
-            <Button type="button" variant="outline" onClick={handleSample} disabled={!ready}>
+            <Button
+              type="button"
+              variant="outline"
+              className="max-md:h-11 max-md:flex-1"
+              onClick={handleSample}
+              disabled={!ready}
+            >
               <FileSpreadsheet />
               Load sample
             </Button>
-            <Button type="button" variant="outline" onClick={handlePrint} disabled={!ready}>
+            <Button
+              type="button"
+              variant="outline"
+              className="hidden md:inline-flex"
+              onClick={handlePrint}
+              disabled={!ready}
+            >
               <Printer />
               Print
             </Button>
-            <Button type="button" onClick={handlePdf} disabled={busy || !ready}>
+            <Button
+              type="button"
+              className="hidden md:inline-flex"
+              onClick={handlePdf}
+              disabled={busy || !ready}
+            >
               <Download />
               {busy ? "Building PDF…" : "Download PDF"}
             </Button>
@@ -245,13 +268,13 @@ export function PaySheetApp() {
         </div>
       </header>
 
-      <div className="app-chrome mx-auto grid max-w-[1700px] gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
+      <div className="app-chrome mx-auto grid max-w-[1700px] gap-4 px-3 py-3 pb-28 md:px-4 md:py-4 md:pb-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
         <div>
           <div className="mb-3 flex gap-1 rounded-lg bg-[#ddd6c8] p-1 xl:hidden">
             <Button
               type="button"
               size="sm"
-              className="flex-1"
+              className="h-11 flex-1"
               variant={tab === "edit" ? "default" : "ghost"}
               onClick={() => setTab("edit")}
             >
@@ -260,7 +283,7 @@ export function PaySheetApp() {
             <Button
               type="button"
               size="sm"
-              className="flex-1"
+              className="h-11 flex-1"
               variant={tab === "preview" ? "default" : "ghost"}
               onClick={() => setTab("preview")}
             >
@@ -338,6 +361,30 @@ export function PaySheetApp() {
             />
           </div>
         ))}
+      </div>
+
+      <div className="app-chrome fixed inset-x-0 bottom-0 z-30 border-t border-[#d7d0c4] bg-[#ece7de]/95 px-3 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-[1700px] gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 flex-1"
+            onClick={handlePrint}
+            disabled={!ready}
+          >
+            <Printer />
+            Print
+          </Button>
+          <Button
+            type="button"
+            className="h-11 flex-1"
+            onClick={handlePdf}
+            disabled={busy || !ready}
+          >
+            <Download />
+            {busy ? "Building PDF…" : "Download PDF"}
+          </Button>
+        </div>
       </div>
     </div>
   );

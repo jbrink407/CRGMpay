@@ -14,7 +14,7 @@ Add lines as work happens. Each week is saved on this device, so Monday’s jobs
 - One page per day (Mon–Sun), up to 20 piece-work lines
 - Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments. Mgr Apvl stays blank on the printout for handwritten initials.
 - Rate looks up from the Job Codes list (`qty × rate`)
-- **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`)
+- **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`). Each day is one letter page, scaled to fit.
 - Weekend tabs remind you of Chuck / Stacy same-day text rules
 - Job codes and rates can be edited or replaced by pasting `CODE, RATE`
 

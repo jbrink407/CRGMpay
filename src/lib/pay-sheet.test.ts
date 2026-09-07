@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { STARTER_CODES, findCode } from "./job-codes";
+import { STARTER_CODES, emptyCode, ensureCodeIds, findCode } from "./job-codes";
 import {
   applyWeekEnding,
   createBlankSheet,
@@ -16,6 +16,22 @@ import {
   weeklyTotal,
   weekdayDate,
 } from "./pay-sheet";
+
+test("new job codes keep a stable id while the code text changes", () => {
+  const created = emptyCode();
+  const typed = { ...created, code: "B" };
+  const again = { ...typed, code: "BH" };
+  assert.equal(created.id, typed.id);
+  assert.equal(typed.id, again.id);
+  assert.notEqual(emptyCode().id, created.id);
+});
+
+test("saved codes without ids get stable ids that survive code edits", () => {
+  const loaded = ensureCodeIds([{ code: "BHL", rate: 1.64 }]);
+  assert.equal(loaded[0].id, "job-BHL");
+  const edited = ensureCodeIds([{ ...loaded[0], code: "BHLX" }]);
+  assert.equal(edited[0].id, "job-BHL");
+});
 
 test("company codes match the Job Codes tab", () => {
   assert.equal(STARTER_CODES.length, 43);

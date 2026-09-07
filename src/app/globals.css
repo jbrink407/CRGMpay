@@ -126,6 +126,8 @@
   }
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 
@@ -141,6 +143,10 @@
   height: 8.5in;
   overflow: hidden;
   background: #fff;
+  page-break-after: always;
+  break-after: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .print-page + .print-page {
