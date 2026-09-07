@@ -3,16 +3,32 @@ import test from "node:test";
 import {
   OTHER_CUSTOMER,
   STARTER_CUSTOMERS,
+  ensureCustomerIds,
   findCustomer,
   parseCustomerList,
   rememberCustomer,
 } from "./customers";
 
 test("starter builders match the company customer list", () => {
-  assert.equal(STARTER_CUSTOMERS.length, 34);
+  assert.equal(STARTER_CUSTOMERS.length, 33);
   assert.ok(findCustomer(STARTER_CUSTOMERS, "D.R. Horton Inc."));
   assert.ok(findCustomer(STARTER_CUSTOMERS, "lennar atlanta"));
-  assert.equal(STARTER_CUSTOMERS.at(-1)?.name, OTHER_CUSTOMER);
+  assert.equal(STARTER_CUSTOMERS.at(-1)?.name, "Waters Edge Group");
+  assert.equal(findCustomer(STARTER_CUSTOMERS, OTHER_CUSTOMER), undefined);
+});
+
+test("saved Other / Custom Builder rows are dropped in favor of Type a name", () => {
+  const loaded = ensureCustomerIds([
+    { name: "Pulte Homes" },
+    { name: OTHER_CUSTOMER },
+    { name: "Lennar Atlanta" },
+  ]);
+  assert.deepEqual(
+    loaded.map((item) => item.name),
+    ["Pulte Homes", "Lennar Atlanta"],
+  );
+  assert.equal(rememberCustomer(loaded, OTHER_CUSTOMER), loaded);
+  assert.equal(parseCustomerList(`${OTHER_CUSTOMER}\nPulte Homes`).length, 1);
 });
 
 test("rememberCustomer adds a typed name once", () => {

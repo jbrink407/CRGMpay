@@ -585,7 +585,7 @@ export function PaySheetForm({
               rows={4}
               value={importCustomers}
               onChange={(event) => setImportCustomers(event.target.value)}
-              placeholder={"Pulte Homes\nLennar Atlanta\nOther / Custom Builder"}
+              placeholder={"Pulte Homes\nLennar Atlanta\nCustom Build Co"}
             />
           </Field>
           <Button

@@ -58,7 +58,7 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 
 ## Builders
 
-Customer on each line is a dropdown of the company builder list (Adams Homes, D.R. Horton, Lennar Atlanta, and the rest). Pick one, or choose **Type a name…** for a one-off. Typed names are remembered on this device. Open **Builders** to add, remove, or paste a list.
+Customer on each line is a dropdown of the company builder list (Adams Homes, D.R. Horton, Lennar Atlanta, and the rest). Pick one, or choose **Type a name…** for a builder that is not on the list. Typed names are remembered on this device. Open **Builders** to add, remove, or paste a list.
 
 ## Job codes
 

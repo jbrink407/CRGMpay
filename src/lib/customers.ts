@@ -39,7 +39,6 @@ const STARTER_NAMES = [
   "Toll Brothers",
   "Traton Homes",
   "Waters Edge Group",
-  OTHER_CUSTOMER,
 ];
 
 export function newCustomerId(): string {
@@ -62,11 +61,17 @@ export function emptyCustomer(partial: Partial<Customer> = {}): Customer {
   };
 }
 
+export function isPlaceholderBuilder(name: string): boolean {
+  return name.trim().toLowerCase() === OTHER_CUSTOMER.toLowerCase();
+}
+
 export function ensureCustomerIds(
   customers: Array<Partial<Customer> & { name?: string }>,
 ): Customer[] {
   const seen = new Set<string>();
-  return customers.map((item, index) => {
+  return customers
+    .filter((item) => !isPlaceholderBuilder(String(item.name || "")))
+    .map((item, index) => {
     const name = String(item.name || "").trim();
     if (item.id && !seen.has(item.id)) {
       seen.add(item.id);
@@ -96,7 +101,7 @@ export function rememberCustomer(
   name: string,
 ): Customer[] {
   const trimmed = name.trim();
-  if (!trimmed) return customers;
+  if (!trimmed || isPlaceholderBuilder(trimmed)) return customers;
   if (findCustomer(customers, trimmed)) return customers;
   return [...customers, emptyCustomer({ name: trimmed })];
 }
@@ -108,7 +113,7 @@ export function parseCustomerList(text: string): Customer[] {
     .filter((line) => line && !/^customers?\b/i.test(line) && !/^builders?\b/i.test(line));
   const unique: Customer[] = [];
   for (const name of names) {
-    if (findCustomer(unique, name)) continue;
+    if (isPlaceholderBuilder(name) || findCustomer(unique, name)) continue;
     unique.push(emptyCustomer({ name }));
   }
   return unique;
