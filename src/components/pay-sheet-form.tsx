@@ -54,7 +54,7 @@ interface PaySheetFormProps {
 }
 
 const selectClassName =
-  "h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm";
+  "h-11 w-full max-w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm";
 
 export function PaySheetForm({
   sheet,
@@ -154,10 +154,10 @@ export function PaySheetForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-24 lg:pb-8">
-      <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+    <div className="flex min-w-0 flex-col gap-6 pb-24 lg:pb-8">
+      <section className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
         <h2 className="font-heading text-sm font-medium">Header</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-pretty text-muted-foreground">
           Prints as INSTALLER / HELPER. Come back tomorrow — this week stays on
           this device.
         </p>
@@ -211,16 +211,16 @@ export function PaySheetForm({
         ) : null}
       </section>
 
-      <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+      <section className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0">
             <h2 className="font-heading text-sm font-medium">Piece work</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-pretty text-muted-foreground">
               One page per day, Monday through Sunday. Fill a few lines
               now and the rest later — nothing is lost when you close the tab.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
             <Button
               type="button"
               size="sm"
@@ -243,14 +243,14 @@ export function PaySheetForm({
           </div>
         </div>
 
-        <div className="mt-3 -mx-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:thin]">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {WEEKDAYS.map((item) => (
             <Button
               key={item}
               type="button"
               size="sm"
               variant={day === item ? "default" : "outline"}
-              className={`shrink-0 max-md:h-11 ${
+              className={`max-md:h-11 ${
                 isWeekend(item) && day !== item ? "border-amber-700/40" : ""
               }`}
               onClick={() => onDayChange(item)}
@@ -408,7 +408,7 @@ export function PaySheetForm({
                   <Trash2 />
                 </Button>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Field label="Date">
                   <Input
                     type="date"
@@ -438,7 +438,7 @@ export function PaySheetForm({
                     ))}
                   </select>
                 </Field>
-                <div className="col-span-2 grid gap-1.5">
+                <div className="grid min-w-0 gap-1.5">
                   <p className="text-xs text-muted-foreground">Customer</p>
                   <CustomerPicker
                     id={`${line.id}-mobile`}
@@ -448,44 +448,42 @@ export function PaySheetForm({
                     onRemember={remember}
                   />
                 </div>
-                <div className="col-span-2">
-                  <Field label="Lot / community or address">
-                    <Input
-                      value={line.address}
-                      onChange={(event) =>
-                        updateLine(line.id, { address: event.target.value })
-                      }
+                <Field label="Lot / community or address">
+                  <Input
+                    value={line.address}
+                    onChange={(event) =>
+                      updateLine(line.id, { address: event.target.value })
+                    }
+                  />
+                </Field>
+                <div className="grid min-w-0 grid-cols-2 gap-2">
+                  <Field label="Qty">
+                    <NumberInput
+                      value={line.qty}
+                      onChange={(qty) => updateLine(line.id, { qty })}
+                    />
+                  </Field>
+                  <Field label="PC pay rate">
+                    <NumberInput
+                      value={line.rate}
+                      onChange={(rate) => updateLine(line.id, { rate })}
+                      money
                     />
                   </Field>
                 </div>
-                <Field label="Qty">
-                  <NumberInput
-                    value={line.qty}
-                    onChange={(qty) => updateLine(line.id, { qty })}
-                  />
-                </Field>
-                <Field label="PC pay rate">
-                  <NumberInput
-                    value={line.rate}
-                    onChange={(rate) => updateLine(line.id, { rate })}
-                    money
-                  />
-                </Field>
                 <Field label="PC pay total">
-                  <p className="flex h-8 items-center text-sm tabular-nums">
+                  <p className="flex h-11 items-center text-sm tabular-nums md:h-8">
                     {formatMoney(lineAmount(line))}
                   </p>
                 </Field>
-                <div className="col-span-2">
-                  <Field label="Comments">
-                    <Input
-                      value={line.comments}
-                      onChange={(event) =>
-                        updateLine(line.id, { comments: event.target.value })
-                      }
-                    />
-                  </Field>
-                </div>
+                <Field label="Comments">
+                  <Input
+                    value={line.comments}
+                    onChange={(event) =>
+                      updateLine(line.id, { comments: event.target.value })
+                    }
+                  />
+                </Field>
               </div>
             </div>
           ))}
@@ -725,7 +723,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5">
+    <label className="grid min-w-0 gap-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </label>
@@ -753,7 +751,7 @@ function CustomerPicker({
   }, [inList]);
 
   return (
-    <div className="grid gap-1">
+    <div className="grid min-w-0 gap-1">
       <select
         className={selectClassName}
         value={typing ? "__custom__" : value}

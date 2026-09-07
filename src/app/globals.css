@@ -122,20 +122,24 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-clip;
   }
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
 }
 
 .print-only {
-  position: absolute;
-  left: -12000px;
+  position: fixed;
+  left: 0;
   top: 0;
-  width: 11in;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .print-page {
@@ -177,6 +181,10 @@
     left: auto;
     top: auto;
     width: auto;
+    height: auto;
+    overflow: visible;
+    opacity: 1;
+    pointer-events: auto;
     display: block !important;
   }
 }
