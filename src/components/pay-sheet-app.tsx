@@ -5,6 +5,12 @@ import { PaySheetForm } from "@/components/pay-sheet-form";
 import { Button } from "@/components/ui/button";
 import { STARTER_CODES, ensureCodeIds, type PieceCode } from "@/lib/job-codes";
 import {
+  STARTER_CUSTOMERS,
+  ensureCustomerIds,
+  rememberCustomer,
+  type Customer,
+} from "@/lib/customers";
+import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   createBlankSheet,
@@ -26,9 +32,11 @@ import { downloadPagesPdf } from "@/lib/pdf";
 import {
   listWeeks,
   loadCodes,
+  loadCustomers,
   loadDraft,
   openOrCreateWeek,
   saveCodes,
+  saveCustomers,
   saveDraft,
   type WeekSummary,
 } from "@/lib/storage";
@@ -43,6 +51,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 export function PaySheetApp() {
   const [sheet, setSheet] = useState<PaySheet>(() => createBlankSheet());
   const [codes, setCodes] = useState<PieceCode[]>(STARTER_CODES);
+  const [customers, setCustomers] = useState<Customer[]>(STARTER_CUSTOMERS);
   const [day, setDay] = useState<Weekday>("monday");
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,8 +66,10 @@ export function PaySheetApp() {
   useEffect(() => {
     const draft = loadDraft();
     const storedCodes = loadCodes();
+    const storedCustomers = loadCustomers();
     const id = window.setTimeout(() => {
       setCodes(ensureCodeIds(storedCodes));
+      setCustomers(ensureCustomerIds(storedCustomers));
       if (!skipHydrate.current) {
         const next = draft ?? createBlankSheet();
         setSheet(next);
@@ -76,11 +87,12 @@ export function PaySheetApp() {
     const handle = window.setTimeout(() => {
       saveDraft(sheet);
       saveCodes(codes);
+      saveCustomers(customers);
       setWeeks(listWeeks());
       setSavedAt(Date.now());
     }, 250);
     return () => window.clearTimeout(handle);
-  }, [sheet, codes, ready]);
+  }, [sheet, codes, customers, ready]);
 
   function updateSheet(next: PaySheet) {
     skipHydrate.current = true;
@@ -113,6 +125,12 @@ export function PaySheetApp() {
     skipHydrate.current = true;
     setCodes(STARTER_CODES);
     const sample = createSampleSheet(STARTER_CODES);
+    setCustomers((current) =>
+      ["Henderson", "Westfield Apts", "St. Marks"].reduce(
+        (list, name) => rememberCustomer(list, name),
+        current,
+      ),
+    );
     setSheet(sample);
     setDay("monday");
     setError(null);
@@ -312,6 +330,8 @@ export function PaySheetApp() {
                 onDayChange={setDay}
                 onChange={updateSheet}
                 onCodesChange={setCodes}
+                customers={customers}
+                onCustomersChange={setCustomers}
                 onWeekEndingChange={handleWeekEnding}
                 onOpenWeek={handleOpenWeek}
               />

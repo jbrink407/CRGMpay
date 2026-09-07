@@ -16,7 +16,7 @@ Add lines as work happens. Each week is saved on this device, so Monday’s jobs
 - Rate looks up from the Job Codes list (`qty × rate`)
 - **Download PDF** is a 7-page landscape letter packet (`INSTALLER {name}.pdf`). Each day is one letter page, scaled to fit.
 - Weekend tabs remind you of Chuck / Stacy same-day text rules
-- Job codes and rates can be edited or replaced by pasting `CODE, RATE`
+- Job codes and builder names can be edited in collapsed lists (open to add, paste, or restore)
 
 ## Run locally
 
@@ -32,7 +32,7 @@ npm run build
 npm start
 ```
 
-No account or database. Drafts, saved weeks, and codes stay in the browser.
+No account or database. Drafts, saved weeks, job codes, and builders stay in the browser.
 
 ## GitHub
 
@@ -56,6 +56,10 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 
 **New week** saves the current week and opens the next Sunday. **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
 
+## Builders
+
+Customer on each line is a dropdown of the company builder list (Adams Homes, D.R. Horton, Lennar Atlanta, and the rest). Pick one, or choose **Type a name…** for a one-off. Typed names are remembered on this device. Open **Builders** to add, remove, or paste a list.
+
 ## Job codes
 
-The starter list is the Job Codes tab from the company workbook (BHL, BORE, REKEY, FD791LAB, and the rest). Paste an updated list anytime.
+The starter list is the Job Codes tab from the company workbook (BHL, BORE, REKEY, FD791LAB, and the rest). Open **Job codes** to edit rates or paste an updated list.

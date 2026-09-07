@@ -1,5 +1,10 @@
 import { STARTER_CODES, ensureCodeIds, type PieceCode } from "./job-codes";
 import {
+  STARTER_CUSTOMERS,
+  ensureCustomerIds,
+  type Customer,
+} from "./customers";
+import {
   WEEKDAYS,
   ensureSheet,
   sundayOfWeek,
@@ -12,6 +17,7 @@ const DRAFT_KEY = "crgmpay:draft:v4";
 const WEEKS_KEY = "crgmpay:weeks:v6";
 const CURRENT_KEY = "crgmpay:current:v6";
 const CODES_KEY = "crgmpay:codes:v2";
+const CUSTOMERS_KEY = "crgmpay:customers:v1";
 
 export interface WeekSummary {
   weekEnding: string;
@@ -152,6 +158,24 @@ export function loadCodes(): PieceCode[] {
 export function saveCodes(codes: PieceCode[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CODES_KEY, JSON.stringify(codes));
+}
+
+export function loadCustomers(): Customer[] {
+  if (typeof window === "undefined") return STARTER_CUSTOMERS;
+  try {
+    const raw = localStorage.getItem(CUSTOMERS_KEY);
+    if (!raw) return STARTER_CUSTOMERS;
+    const parsed = JSON.parse(raw) as Customer[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return STARTER_CUSTOMERS;
+    return ensureCustomerIds(parsed);
+  } catch {
+    return STARTER_CUSTOMERS;
+  }
+}
+
+export function saveCustomers(customers: Customer[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
 }
 
 export function ensureWeekday(day: string): Weekday {

@@ -11,6 +11,14 @@ import {
   type PieceCode,
 } from "@/lib/job-codes";
 import {
+  STARTER_CUSTOMERS,
+  emptyCustomer,
+  findCustomer,
+  parseCustomerList,
+  rememberCustomer,
+  type Customer,
+} from "@/lib/customers";
+import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   WEEKDAY_SHORT,
@@ -28,7 +36,7 @@ import {
   type Weekday,
 } from "@/lib/pay-sheet";
 import { type WeekSummary } from "@/lib/storage";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface PaySheetFormProps {
@@ -39,6 +47,8 @@ interface PaySheetFormProps {
   onDayChange: (day: Weekday) => void;
   onChange: (sheet: PaySheet) => void;
   onCodesChange: (codes: PieceCode[]) => void;
+  customers: Customer[];
+  onCustomersChange: (customers: Customer[]) => void;
   onWeekEndingChange: (weekEnding: string) => void;
   onOpenWeek: (weekEnding: string) => void;
 }
@@ -54,11 +64,15 @@ export function PaySheetForm({
   onDayChange,
   onChange,
   onCodesChange,
+  customers,
+  onCustomersChange,
   onWeekEndingChange,
   onOpenWeek,
 }: PaySheetFormProps) {
   const [importText, setImportText] = useState("");
+  const [importCustomers, setImportCustomers] = useState("");
   const focusCodeId = useRef<string | null>(null);
+  const focusCustomerId = useRef<string | null>(null);
   const lines = sheet.days[day] ?? [];
 
   useEffect(() => {
@@ -69,6 +83,15 @@ export function PaySheetForm({
     node?.focus();
     node?.scrollIntoView({ block: "center" });
   }, [codes]);
+
+  useEffect(() => {
+    const id = focusCustomerId.current;
+    if (!id) return;
+    focusCustomerId.current = null;
+    const node = document.getElementById(`builder-name-${id}`) as HTMLInputElement | null;
+    node?.focus();
+    node?.scrollIntoView({ block: "center" });
+  }, [customers]);
 
   function patch(partial: Partial<PaySheet>) {
     onChange({ ...sheet, ...partial });
@@ -114,6 +137,20 @@ export function PaySheetForm({
     onCodesChange(
       codes.map((item, i) => (i === index ? { ...item, ...partial } : item)),
     );
+  }
+
+  function updateCustomer(index: number, partial: Partial<Customer>) {
+    onCustomersChange(
+      customers.map((item, i) => (i === index ? { ...item, ...partial } : item)),
+    );
+  }
+
+  function setCustomer(lineId: string, name: string) {
+    updateLine(lineId, { customer: name });
+  }
+
+  function remember(name: string) {
+    onCustomersChange(rememberCustomer(customers, name));
   }
 
   return (
@@ -261,12 +298,13 @@ export function PaySheetForm({
                       }
                     />
                   </td>
-                  <td className="py-1 pr-2">
-                    <Input
+                  <td className="min-w-[12rem] py-1 pr-2">
+                    <CustomerPicker
+                      id={line.id}
                       value={line.customer}
-                      onChange={(event) =>
-                        updateLine(line.id, { customer: event.target.value })
-                      }
+                      customers={customers}
+                      onChange={(name) => setCustomer(line.id, name)}
+                      onRemember={remember}
                     />
                   </td>
                   <td className="py-1 pr-2">
@@ -400,15 +438,15 @@ export function PaySheetForm({
                     ))}
                   </select>
                 </Field>
-                <div className="col-span-2">
-                  <Field label="Customer">
-                    <Input
-                      value={line.customer}
-                      onChange={(event) =>
-                        updateLine(line.id, { customer: event.target.value })
-                      }
-                    />
-                  </Field>
+                <div className="col-span-2 grid gap-1.5">
+                  <p className="text-xs text-muted-foreground">Customer</p>
+                  <CustomerPicker
+                    id={`${line.id}-mobile`}
+                    value={line.customer}
+                    customers={customers}
+                    onChange={(name) => setCustomer(line.id, name)}
+                    onRemember={remember}
+                  />
                 </div>
                 <div className="col-span-2">
                   <Field label="Lot / community or address">
@@ -454,12 +492,105 @@ export function PaySheetForm({
         </div>
       </section>
 
-      <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="font-heading text-sm font-medium">Job codes</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          From the Job Codes tab. Paste an updated list as CODE, RATE.
-        </p>
-        <div className="mt-3 max-h-64 overflow-auto rounded-lg ring-1 ring-foreground/10">
+      <CollapsedEditor
+        title="Builders"
+        summary={`${customers.length} names · open to add or edit the Customer list`}
+      >
+        <div className="max-h-64 overflow-auto rounded-lg ring-1 ring-foreground/10">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-card">
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="px-2 py-2 font-medium">Name</th>
+                <th className="w-10 px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((item, index) => (
+                <tr key={item.id} className="border-t">
+                  <td className="px-2 py-1">
+                    <Input
+                      id={`builder-name-${item.id}`}
+                      value={item.name}
+                      onChange={(event) =>
+                        updateCustomer(index, { name: event.target.value })
+                      }
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      aria-label={`Remove ${item.name || "builder"}`}
+                      onClick={() =>
+                        onCustomersChange(
+                          customers.filter((_, i) => i !== index),
+                        )
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="max-md:h-11"
+            onClick={() => {
+              const created = emptyCustomer();
+              focusCustomerId.current = created.id;
+              onCustomersChange([...customers, created]);
+            }}
+          >
+            <Plus />
+            Add builder
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onCustomersChange(STARTER_CUSTOMERS)}
+          >
+            Restore company list
+          </Button>
+        </div>
+        <div className="mt-4 grid gap-2">
+          <Field label="Paste builders (one per line)">
+            <Textarea
+              rows={4}
+              value={importCustomers}
+              onChange={(event) => setImportCustomers(event.target.value)}
+              placeholder={"Pulte Homes\nLennar Atlanta\nOther / Custom Builder"}
+            />
+          </Field>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const parsed = parseCustomerList(importCustomers);
+              if (parsed.length) {
+                onCustomersChange(parsed);
+                setImportCustomers("");
+              }
+            }}
+          >
+            Replace list from paste
+          </Button>
+        </div>
+      </CollapsedEditor>
+
+      <CollapsedEditor
+        title="Job codes"
+        summary={`${codes.length} codes · open to edit rates or paste a new list`}
+      >
+        <div className="max-h-64 overflow-auto rounded-lg ring-1 ring-foreground/10">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-card">
               <tr className="text-left text-xs text-muted-foreground">
@@ -558,8 +689,31 @@ export function PaySheetForm({
             Replace list from paste
           </Button>
         </div>
-      </section>
+      </CollapsedEditor>
     </div>
+  );
+}
+
+function CollapsedEditor({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="group rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-1 [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          <h2 className="font-heading text-sm font-medium">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+        </div>
+        <ChevronDown className="size-5 shrink-0 text-muted-foreground transition group-open:rotate-180" />
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
   );
 }
 
@@ -575,6 +729,68 @@ function Field({
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </label>
+  );
+}
+
+function CustomerPicker({
+  id,
+  value,
+  customers,
+  onChange,
+  onRemember,
+}: {
+  id: string;
+  value: string;
+  customers: Customer[];
+  onChange: (name: string) => void;
+  onRemember: (name: string) => void;
+}) {
+  const inList = Boolean(findCustomer(customers, value));
+  const [typing, setTyping] = useState(Boolean(value) && !inList);
+
+  useEffect(() => {
+    if (inList) setTyping(false);
+  }, [inList]);
+
+  return (
+    <div className="grid gap-1">
+      <select
+        className={selectClassName}
+        value={typing ? "__custom__" : value}
+        onChange={(event) => {
+          const next = event.target.value;
+          if (next === "__custom__") {
+            setTyping(true);
+            if (inList) onChange("");
+            window.setTimeout(() => {
+              document.getElementById(`customer-custom-${id}`)?.focus();
+            }, 0);
+            return;
+          }
+          setTyping(false);
+          onChange(next);
+        }}
+      >
+        <option value="">Customer</option>
+        {customers.map((item) =>
+          item.name ? (
+            <option key={item.id} value={item.name}>
+              {item.name}
+            </option>
+          ) : null,
+        )}
+        <option value="__custom__">Type a name…</option>
+      </select>
+      {typing ? (
+        <Input
+          id={`customer-custom-${id}`}
+          value={value}
+          placeholder="Builder name"
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={() => onRemember(value)}
+        />
+      ) : null}
+    </div>
   );
 }
 
