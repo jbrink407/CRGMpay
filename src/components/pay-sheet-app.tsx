@@ -228,7 +228,7 @@ export function PaySheetApp() {
             />
             <div className="min-w-0">
               <p className="text-[11px] font-medium tracking-[0.18em] text-[#e35756] uppercase">
-                CRGM Pay
+                CR Pay
               </p>
               <h1 className="font-heading text-base leading-tight sm:text-lg">
                 Payroll detail log

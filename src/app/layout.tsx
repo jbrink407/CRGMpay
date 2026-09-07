@@ -27,9 +27,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CRGM Pay — Payroll detail log",
+  title: "CR Pay — Payroll detail log",
   description:
-    "Fill the Construction Resources payroll detail log and print a landscape PDF that matches the company pay sheet.",
+    "Fill the Construction Resources Glass & Mirror payroll detail log and print a landscape PDF that matches the company pay sheet.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

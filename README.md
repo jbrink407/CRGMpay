@@ -1,6 +1,6 @@
-# CRGM Pay
+# CR Pay
 
-A small web app for filling the company **Payroll Detail Log** and printing it as a landscape PDF.
+A small web app for filling the Construction Resources Glass & Mirror **Payroll Detail Log** and printing it as a landscape PDF.
 
 Live: [crgmpay.onrender.com](https://crgmpay.onrender.com)
 
