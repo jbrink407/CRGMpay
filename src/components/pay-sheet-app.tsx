@@ -295,13 +295,13 @@ export function PaySheetApp() {
         </div>
       </header>
 
-      <div className="app-chrome mx-auto grid min-w-0 max-w-[1700px] gap-4 px-3 py-3 pb-28 md:px-4 md:py-4 md:pb-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
+      <div className="app-chrome mx-auto grid w-full min-w-0 max-w-[1700px] grid-cols-1 gap-4 px-3 py-3 pb-28 md:px-4 md:py-4 md:pb-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
         <div className="min-w-0">
-          <div className="mb-3 grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-[#ddd6c8] p-1 xl:hidden">
+          <div className="mb-3 grid w-full min-w-0 grid-cols-2 gap-1 rounded-lg bg-[#ddd6c8] p-1 xl:hidden">
             <Button
               type="button"
               size="sm"
-              className="h-11 flex-1"
+              className="h-11 min-w-0 w-full"
               variant={tab === "edit" ? "default" : "ghost"}
               onClick={() => setTab("edit")}
             >
@@ -310,7 +310,7 @@ export function PaySheetApp() {
             <Button
               type="button"
               size="sm"
-              className="h-11 flex-1"
+              className="h-11 min-w-0 w-full"
               variant={tab === "preview" ? "default" : "ghost"}
               onClick={() => setTab("preview")}
             >
@@ -352,16 +352,18 @@ export function PaySheetApp() {
           </div>
         </div>
 
-        <aside className={`${tab === "preview" ? "block" : "hidden"} xl:block`}>
-          <div className="xl:sticky xl:top-20">
+        <aside
+          className={`min-w-0 w-full max-w-full overflow-hidden ${tab === "preview" ? "block" : "hidden"} xl:block`}
+        >
+          <div className="min-w-0 xl:sticky xl:top-20">
             <p className="mb-2 hidden text-xs tracking-wide text-[#6f675c] uppercase xl:block">
               Print preview · {WEEKDAY_LABELS[day]}
               {paging.page
                 ? ` · page ${paging.page} of ${paging.pages}`
                 : ` · not in this week’s ${paging.pages}-page packet`}
             </p>
-            <div className="sheet-scroll overflow-auto rounded-xl bg-[#cfc6b6] p-2 shadow-inner xl:max-h-[calc(100vh-7rem)]">
-              <FitPreview>
+            <div className="sheet-scroll min-w-0 overflow-hidden rounded-xl bg-[#cfc6b6] p-2 shadow-inner xl:max-h-[calc(100vh-7rem)] xl:overflow-auto">
+              <FitPreview active={tab === "preview"}>
                 <PaySheetDocument
                   sheet={sheet}
                   day={day}
@@ -422,28 +424,41 @@ export function PaySheetApp() {
   );
 }
 
-function FitPreview({ children }: { children: ReactNode }) {
+function FitPreview({
+  children,
+  active = true,
+}: {
+  children: ReactNode;
+  active?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.28);
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
     const update = () => {
-      setScale(Math.min(1, node.clientWidth / 1056));
+      const width = node.getBoundingClientRect().width;
+      if (width < 8) return;
+      setScale(Math.min(1, width / 1056));
     };
     update();
+    const id = window.requestAnimationFrame(update);
     const observer = new ResizeObserver(update);
     observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      window.cancelAnimationFrame(id);
+      observer.disconnect();
+    };
+  }, [active]);
 
   return (
-    <div ref={ref} className="overflow-hidden">
-      <div style={{ height: 816 * scale }}>
+    <div ref={ref} className="w-full min-w-0 max-w-full overflow-hidden">
+      <div style={{ height: 816 * scale, width: "100%" }}>
         <div
           style={{
             width: 1056,
+            height: 816,
             transform: `scale(${scale})`,
             transformOrigin: "top left",
           }}
