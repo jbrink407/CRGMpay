@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fitToLetterLandscape } from "./pdf";
+import { fitToLetterLandscape, PDF_TEXT_NUDGE_PX } from "./pdf";
 
 test("letter-landscape fit keeps a tall capture on one page", () => {
   const box = fitToLetterLandscape(1100, 1200, 11, 8.5, 0.06);
@@ -16,4 +16,8 @@ test("letter-landscape fit uses full width for a matching 11x8.5 capture", () =>
   assert.ok(Math.abs(box.width - (11 - 0.12)) < 0.05 || Math.abs(box.height - (8.5 - 0.12)) < 0.05);
   assert.ok(box.width <= 11 - 0.12 + 1e-9);
   assert.ok(box.height <= 8.5 - 0.12 + 1e-9);
+});
+
+test("PDF capture nudges table text down far enough to clear the top rule", () => {
+  assert.ok(PDF_TEXT_NUDGE_PX >= 8);
 });

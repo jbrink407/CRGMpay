@@ -5,6 +5,9 @@ const PAGE_PX = {
   height: LETTER_LANDSCAPE.height * CSS_PX_PER_IN,
 };
 
+/** html2canvas paints table text high; shift wrapped glyphs down only in the capture. */
+export const PDF_TEXT_NUDGE_PX = 9;
+
 /** Fit an image into a letter-landscape page with a small margin so printers don't clip. */
 export function fitToLetterLandscape(
   imageWidthPx: number,
@@ -109,12 +112,14 @@ async function captureElement(
         width: ${PAGE_PX.width}px !important;
         height: ${PAGE_PX.height}px !important;
       }
-      /* html2canvas paints table text high; extra top padding keeps glyphs in the boxes. */
-      [data-print-root] td,
-      [data-print-root] th {
-        padding-top: 6px !important;
-        vertical-align: middle !important;
-        line-height: 1.15 !important;
+      [data-print-root] table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+      }
+      [data-ink] {
+        display: inline-block !important;
+        position: relative !important;
+        top: ${PDF_TEXT_NUDGE_PX}px !important;
       }
     </style>
   </head>
@@ -147,12 +152,23 @@ async function captureElement(
       windowHeight: PAGE_PX.height,
       scrollX: 0,
       scrollY: 0,
-      onclone(_doc, cloned) {
-        cloned.querySelectorAll("td, th").forEach((node) => {
-          const cell = node as HTMLElement;
-          const pad = Number.parseFloat(cell.style.paddingTop || "0");
-          cell.style.paddingTop = `${Math.max(pad, 6)}px`;
+      onclone(doc, cloned) {
+        const shift = `${PDF_TEXT_NUDGE_PX}px`;
+        cloned.querySelectorAll("[data-ink]").forEach((node) => {
+          const ink = node as HTMLElement;
+          ink.style.setProperty("display", "inline-block", "important");
+          ink.style.setProperty("position", "relative", "important");
+          ink.style.setProperty("top", shift, "important");
         });
+        const extra = doc.createElement("style");
+        extra.textContent = `
+          [data-ink] {
+            display: inline-block !important;
+            position: relative !important;
+            top: ${shift} !important;
+          }
+        `;
+        doc.head.appendChild(extra);
       },
     });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
@@ -164,10 +180,6 @@ async function captureElement(
 }
 
 function captureScale() {
-  if (typeof window === "undefined") return 2;
-  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
-  const narrow = window.innerWidth < 700;
-  if (coarse || narrow) return 1.5;
   return 2;
 }
 
