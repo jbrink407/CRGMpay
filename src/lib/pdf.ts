@@ -109,6 +109,13 @@ async function captureElement(
         width: ${PAGE_PX.width}px !important;
         height: ${PAGE_PX.height}px !important;
       }
+      /* html2canvas paints table text high; extra top padding keeps glyphs in the boxes. */
+      [data-print-root] td,
+      [data-print-root] th {
+        padding-top: 6px !important;
+        vertical-align: middle !important;
+        line-height: 1.15 !important;
+      }
     </style>
   </head>
   <body></body>
@@ -140,6 +147,13 @@ async function captureElement(
       windowHeight: PAGE_PX.height,
       scrollX: 0,
       scrollY: 0,
+      onclone(_doc, cloned) {
+        cloned.querySelectorAll("td, th").forEach((node) => {
+          const cell = node as HTMLElement;
+          const pad = Number.parseFloat(cell.style.paddingTop || "0");
+          cell.style.paddingTop = `${Math.max(pad, 6)}px`;
+        });
+      },
     });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
     const box = fitToLetterLandscape(canvas.width, canvas.height, pageWidth, pageHeight);

@@ -54,7 +54,7 @@ export function PaySheetDocument({
           <col style={{ width: "6.2%" }} />
         </colgroup>
         <tbody>
-          <tr>
+          <tr className={styles.header}>
             <td className={`${styles.installer} ${styles.thick}`} colSpan={3}>
               INSTALLER: {sheet.installerName || " "}
             </td>
@@ -68,7 +68,7 @@ export function PaySheetDocument({
               {formatUSDate(sheet.weekEnding)}
             </td>
           </tr>
-          <tr>
+          <tr className={styles.header}>
             <td className={`${styles.helperLabel} ${styles.thick}`}>HELPER:</td>
             <td className={`${styles.helperName} ${styles.thick}`} colSpan={2}>
               {sheet.helperName || " "}
@@ -124,15 +124,11 @@ export function PaySheetDocument({
           </tr>
           <tr className={styles.rules}>
             <td colSpan={9}>{POLICY_LINES[2]}</td>
-            <td className={`${styles.right} ${styles.pageNum}`} colSpan={1}>
-              PAGE
-            </td>
-            <td className={`${styles.center} ${styles.pageNum}`}>
-              {page || ""}
-            </td>
-            <td className={`${styles.center} ${styles.pageNum}`}>OF</td>
-            <td className={`${styles.center} ${styles.pageNum}`}>{pages}</td>
-            <td className={styles.pageNum}>PAGES</td>
+            <td className={styles.pageNumLabel}>PAGE</td>
+            <td className={styles.pageNumBox}>{page || ""}</td>
+            <td className={styles.pageNumLabel}>OF</td>
+            <td className={styles.pageNumBox}>{pages}</td>
+            <td className={styles.pageNumLabel}>PAGES</td>
           </tr>
           <tr className={styles.rules}>
             <td colSpan={9}>{POLICY_LINES[3]}</td>
