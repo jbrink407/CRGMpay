@@ -5,8 +5,8 @@ const PAGE_PX = {
   height: LETTER_LANDSCAPE.height * CSS_PX_PER_IN,
 };
 
-/** html2canvas paints table text high; shift wrapped glyphs down only in the capture. */
-export const PDF_TEXT_NUDGE_PX = 9;
+/** html2canvas paints table text slightly high; one small capture-only shift. */
+export const PDF_TEXT_NUDGE_PX = 0;
 
 /** Fit an image into a letter-landscape page with a small margin so printers don't clip. */
 export function fitToLetterLandscape(
@@ -112,15 +112,6 @@ async function captureElement(
         width: ${PAGE_PX.width}px !important;
         height: ${PAGE_PX.height}px !important;
       }
-      [data-print-root] table {
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-      }
-      [data-ink] {
-        display: inline-block !important;
-        position: relative !important;
-        top: ${PDF_TEXT_NUDGE_PX}px !important;
-      }
     </style>
   </head>
   <body></body>
@@ -152,24 +143,6 @@ async function captureElement(
       windowHeight: PAGE_PX.height,
       scrollX: 0,
       scrollY: 0,
-      onclone(doc, cloned) {
-        const shift = `${PDF_TEXT_NUDGE_PX}px`;
-        cloned.querySelectorAll("[data-ink]").forEach((node) => {
-          const ink = node as HTMLElement;
-          ink.style.setProperty("display", "inline-block", "important");
-          ink.style.setProperty("position", "relative", "important");
-          ink.style.setProperty("top", shift, "important");
-        });
-        const extra = doc.createElement("style");
-        extra.textContent = `
-          [data-ink] {
-            display: inline-block !important;
-            position: relative !important;
-            top: ${shift} !important;
-          }
-        `;
-        doc.head.appendChild(extra);
-      },
     });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
     const box = fitToLetterLandscape(canvas.width, canvas.height, pageWidth, pageHeight);

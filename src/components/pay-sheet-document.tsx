@@ -63,9 +63,13 @@ export function PaySheetDocument({
         <tbody>
           <tr className={styles.header}>
             <td className={`${styles.installer} ${styles.thick}`} colSpan={3}>
-              <Ink>INSTALLER: {sheet.installerName || " "}</Ink>
+              <Ink>
+                INSTALLER: {sheet.installerName || " "}
+                <br />
+                HELPER: {sheet.helperName || " "}
+              </Ink>
             </td>
-            <td className={`${styles.title} ${styles.thick}`} colSpan={6} rowSpan={2}>
+            <td className={`${styles.title} ${styles.thick}`} colSpan={6}>
               <Ink>PAYROLL DETAIL LOG</Ink>
             </td>
             <td className={`${styles.weekEndingLabel} ${styles.thick}`}>
@@ -74,16 +78,6 @@ export function PaySheetDocument({
             <td className={`${styles.weekEndingValue} ${styles.thick}`} colSpan={4}>
               <Ink>{formatUSDate(sheet.weekEnding)}</Ink>
             </td>
-          </tr>
-          <tr className={styles.header}>
-            <td className={`${styles.helperLabel} ${styles.thick}`}>
-              <Ink>HELPER:</Ink>
-            </td>
-            <td className={`${styles.helperName} ${styles.thick}`} colSpan={2}>
-              <Ink>{sheet.helperName || " "}</Ink>
-            </td>
-            <td className={styles.thick} />
-            <td className={styles.thick} colSpan={4} />
           </tr>
           <tr>
             <td className={styles.head}>

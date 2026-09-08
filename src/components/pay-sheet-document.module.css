@@ -47,14 +47,15 @@
 }
 
 .header td {
-  height: 18pt;
+  height: 32pt;
 }
 
 .installer {
-  font-size: 11pt;
+  font-size: 10pt;
   font-weight: 700;
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
+  line-height: 1.35;
   padding-top: 4pt;
 }
 
