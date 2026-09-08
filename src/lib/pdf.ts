@@ -5,8 +5,8 @@ const PAGE_PX = {
   height: LETTER_LANDSCAPE.height * CSS_PX_PER_IN,
 };
 
-/** html2canvas paints table text slightly high; one small capture-only shift. */
-export const PDF_TEXT_NUDGE_PX = 0;
+/** html2canvas paints table text a few pixels low; negative moves capture glyphs up. */
+export const PDF_TEXT_NUDGE_PX = -4;
 
 /** Fit an image into a letter-landscape page with a small margin so printers don't clip. */
 export function fitToLetterLandscape(
@@ -111,6 +111,10 @@ async function captureElement(
       [data-print-root] {
         width: ${PAGE_PX.width}px !important;
         height: ${PAGE_PX.height}px !important;
+      }
+      [data-ink] {
+        position: relative !important;
+        top: ${PDF_TEXT_NUDGE_PX}px !important;
       }
     </style>
   </head>

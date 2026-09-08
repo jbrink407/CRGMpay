@@ -18,6 +18,6 @@ test("letter-landscape fit uses full width for a matching 11x8.5 capture", () =>
   assert.ok(box.height <= 8.5 - 0.12 + 1e-9);
 });
 
-test("PDF capture does not apply a full-row text nudge", () => {
-  assert.ok(PDF_TEXT_NUDGE_PX >= 0 && PDF_TEXT_NUDGE_PX < 8);
+test("PDF capture nudge stays well under a full row", () => {
+  assert.ok(Math.abs(PDF_TEXT_NUDGE_PX) < 8);
 });
