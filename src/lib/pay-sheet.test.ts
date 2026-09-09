@@ -14,6 +14,7 @@ import {
   pageTotal,
   pdfFilename,
   printDays,
+  packetDays,
   sheetPage,
   sundayOfWeek,
   weeklyTotal,
@@ -48,6 +49,10 @@ test("sample week uses installer names from the workbook", () => {
   assert.equal(sheet.installerName, "Joseph Scott Kemper");
   assert.equal(sheet.helperName, "Joshua Brinker");
   assert.equal(pdfFilename(sheet), "INSTALLER Joseph Scott Kemper.pdf");
+  assert.equal(
+    pdfFilename(sheet, "tuesday"),
+    "INSTALLER Joseph Scott Kemper Tuesday.pdf",
+  );
   assert.equal(pageTotal(sheet.days.monday), 58.85);
   assert.equal(pageTotal(sheet.days.thursday), 0);
   assert.equal(pageTotal(sheet.days.saturday), 20.5);
@@ -151,4 +156,11 @@ test("page numbers follow days with work, not a fixed seven", () => {
     page: 1,
     pages: 1,
   });
+  assert.deepEqual(packetDays(sample, "thursday", "day"), ["thursday"]);
+  assert.deepEqual(packetDays(sample, "monday", "week"), [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "saturday",
+  ]);
 });

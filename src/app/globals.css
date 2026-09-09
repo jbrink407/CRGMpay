@@ -131,7 +131,8 @@
   }
 }
 
-.print-only {
+.print-only,
+.pdf-only {
   position: fixed;
   left: 0;
   top: 0;
@@ -169,10 +170,12 @@
     background: #fff !important;
     color: #000 !important;
     height: auto !important;
+    overflow: visible !important;
   }
 
   .app-chrome,
-  .sheet-scroll {
+  .sheet-scroll,
+  .pdf-only {
     display: none !important;
   }
 

@@ -260,6 +260,18 @@ export function printDays(sheet: PaySheet, fallback: Weekday): Weekday[] {
   return days.length ? days : [fallback];
 }
 
+export type PacketScope = "day" | "week";
+
+/** PDF packet: the open day only, or every day with work. */
+export function packetDays(
+  sheet: PaySheet,
+  day: Weekday,
+  scope: PacketScope,
+): Weekday[] {
+  if (scope === "day") return [day];
+  return printDays(sheet, day);
+}
+
 export function sheetPage(
   sheet: PaySheet,
   day: Weekday,
@@ -313,8 +325,9 @@ export function printedJobs(lines: JobLine[], minRows = 20): JobLine[] {
   return padded.slice(0, minRows);
 }
 
-export function pdfFilename(sheet: PaySheet): string {
+export function pdfFilename(sheet: PaySheet, day?: Weekday): string {
   const name = (sheet.installerName || "SHEET").trim();
+  if (day) return `INSTALLER ${name} ${WEEKDAY_LABELS[day]}.pdf`;
   return `INSTALLER ${name}.pdf`;
 }
 

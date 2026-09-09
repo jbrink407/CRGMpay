@@ -14,7 +14,7 @@ Add lines as work happens. Each week is saved on this device, so Monday’s jobs
 - One entry page per day (Mon–Sun), up to 20 piece-work lines
 - Columns match the spreadsheet: Date, Customer, Lot/Community or Address, Labor Code, Qty, PC Pay Rate, PC Pay Total, Comments. Mgr Apvl stays blank on the printout for handwritten initials.
 - Rate looks up from the Job Codes list (`qty × rate`)
-- **Download PDF** is a landscape letter packet (`INSTALLER {name}.pdf`) with one page per day worked. Page numbers match that count.
+- **Download PDF** is a landscape letter PDF (`INSTALLER {name}.pdf`). Choose **This day** for the open day only (PAGE 1 OF 1) or **All days with work** for the week packet. Page numbers match that count.
 - Weekend tabs remind you of Chuck / Stacy same-day text rules
 - Job codes and builder names can be edited in collapsed lists (open to add, paste, or restore)
 
@@ -52,7 +52,7 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 2. Confirm week ending (Sunday). Changing it opens that week if you already started it.
 3. Choose a day tab and add lines: customer, address, labor code, qty.
 4. Close the laptop and come back later — the week is still there.
-5. Download PDF or print when the week is done. Only days with work are included.
+5. Download PDF or print when the week is done. Download PDF asks whether you want this day only or every day with work.
 
 **New week** saves the current week and opens the next Sunday. Saved weeks appear as chips under the week-ending date — open one to continue, or trash it to remove it from this device (with confirmation). **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
 

@@ -2,7 +2,13 @@
 
 import { PaySheetDocument } from "@/components/pay-sheet-document";
 import { PaySheetForm } from "@/components/pay-sheet-form";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { STARTER_CODES, ensureCodeIds, type PieceCode } from "@/lib/job-codes";
 import {
   STARTER_CUSTOMERS,
@@ -19,6 +25,7 @@ import {
   formatUSDate,
   lastWorkedDay,
   nextSunday,
+  packetDays,
   pdfFilename,
   printDays,
   sheetPage,
@@ -28,6 +35,7 @@ import {
   weekdayFromIso,
   weeklyTotal,
   type PaySheet,
+  type PacketScope,
   type Weekday,
 } from "@/lib/pay-sheet";
 import { downloadPagesPdf } from "@/lib/pdf";
@@ -43,7 +51,9 @@ import {
   saveDraft,
   type WeekSummary,
 } from "@/lib/storage";
+import { cn } from "cn";
 import {
+  ChevronDown,
   Download,
   FileSpreadsheet,
   Printer,
@@ -64,6 +74,7 @@ export function PaySheetApp() {
   const [weeks, setWeeks] = useState<WeekSummary[]>([]);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const pageRefs = useRef<Partial<Record<Weekday, HTMLDivElement | null>>>({});
+  const dayPdfRef = useRef<HTMLDivElement | null>(null);
   const skipHydrate = useRef(false);
 
   useEffect(() => {
@@ -199,29 +210,37 @@ export function PaySheetApp() {
     setNotice(`Removed week ending ${label} from this device.`);
   }
 
-  async function handlePdf() {
+  async function handlePdf(scope: PacketScope) {
     if (!sheet.installerName.trim()) {
       setError("Add an installer name before downloading the PDF.");
       setNotice(null);
       setTab("edit");
       return;
     }
-    const packet = printDays(sheet, day);
-    const pages = packet
-      .map((item) => pageRefs.current[item])
-      .filter((node): node is HTMLDivElement => Boolean(node));
-    if (pages.length !== packet.length) {
+    const days = packetDays(sheet, day, scope);
+    const pages =
+      scope === "day"
+        ? dayPdfRef.current
+          ? [dayPdfRef.current]
+          : []
+        : days
+            .map((item) => pageRefs.current[item])
+            .filter((node): node is HTMLDivElement => Boolean(node));
+    if (pages.length !== days.length) {
       setError("Print pages are not ready yet. Try again.");
       return;
     }
+    const filename = pdfFilename(sheet, scope === "day" ? day : undefined);
     setBusy(true);
     setError(null);
     setNotice("Building PDF…");
     try {
-      await downloadPagesPdf(pages, pdfFilename(sheet), "landscape");
-      const count = packet.length;
+      await downloadPagesPdf(pages, filename, "landscape");
+      const count = pages.length;
       setNotice(
-        `Downloaded ${pdfFilename(sheet)} · ${count} landscape letter page${count === 1 ? "" : "s"}`,
+        scope === "day"
+          ? `Downloaded ${filename} · ${WEEKDAY_LABELS[day]} only`
+          : `Downloaded ${filename} · ${count} landscape letter page${count === 1 ? "" : "s"}`,
       );
     } catch (err) {
       setNotice(null);
@@ -308,15 +327,14 @@ export function PaySheetApp() {
               <Printer />
               Print
             </Button>
-            <Button
-              type="button"
+            <PdfMenu
+              busy={busy}
+              ready={ready}
+              day={day}
+              weekPages={packet.length}
               className="hidden md:inline-flex"
-              onClick={handlePdf}
-              disabled={busy || !ready}
-            >
-              <Download />
-              {busy ? "Building PDF…" : "Download PDF"}
-            </Button>
+              onPick={handlePdf}
+            />
           </div>
         </div>
       </header>
@@ -424,6 +442,18 @@ export function PaySheetApp() {
         ))}
       </div>
 
+      <div className="pdf-only" aria-hidden="true">
+        <div ref={dayPdfRef} className="print-page">
+          <PaySheetDocument
+            sheet={sheet}
+            day={day}
+            page={1}
+            pages={1}
+            showWeeklyTotal={day === lastWorkedDay(sheet)}
+          />
+        </div>
+      </div>
+
       <div className="app-chrome fixed inset-x-0 bottom-0 z-30 border-t border-[#d7d0c4] bg-[#ece7de]/95 px-3 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-[1700px] gap-2">
           <Button
@@ -436,18 +466,63 @@ export function PaySheetApp() {
             <Printer />
             Print
           </Button>
-          <Button
-            type="button"
+          <PdfMenu
+            busy={busy}
+            ready={ready}
+            day={day}
+            weekPages={packet.length}
             className="h-11 flex-1"
-            onClick={handlePdf}
-            disabled={busy || !ready}
-          >
-            <Download />
-            {busy ? "Building PDF…" : "Download PDF"}
-          </Button>
+            onPick={handlePdf}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+function PdfMenu({
+  busy,
+  ready,
+  day,
+  weekPages,
+  className,
+  onPick,
+}: {
+  busy: boolean;
+  ready: boolean;
+  day: Weekday;
+  weekPages: number;
+  className?: string;
+  onPick: (scope: PacketScope) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={busy || !ready}
+        className={cn(buttonVariants(), className)}
+      >
+        <Download />
+        {busy ? "Building PDF…" : "Download PDF"}
+        <ChevronDown />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-auto min-w-56">
+        <DropdownMenuItem
+          className="max-md:h-11"
+          onClick={() => onPick("day")}
+        >
+          This day ({WEEKDAY_LABELS[day]})
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="max-md:h-11"
+          onClick={() => onPick("week")}
+        >
+          All days with work
+          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+            {weekPages} page{weekPages === 1 ? "" : "s"}
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
