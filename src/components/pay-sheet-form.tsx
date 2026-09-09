@@ -36,7 +36,7 @@ import {
   type Weekday,
 } from "@/lib/pay-sheet";
 import { type WeekSummary } from "@/lib/storage";
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, CopyPlus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface PaySheetFormProps {
@@ -75,6 +75,7 @@ export function PaySheetForm({
   const [importCustomers, setImportCustomers] = useState("");
   const focusCodeId = useRef<string | null>(null);
   const focusCustomerId = useRef<string | null>(null);
+  const focusLineId = useRef<string | null>(null);
   const lines = sheet.days[day] ?? [];
 
   useEffect(() => {
@@ -94,6 +95,21 @@ export function PaySheetForm({
     node?.focus();
     node?.scrollIntoView({ block: "center" });
   }, [customers]);
+
+  useEffect(() => {
+    const id = focusLineId.current;
+    if (!id) return;
+    focusLineId.current = null;
+    const mobile = document.getElementById(`line-${id}-mobile`);
+    const desktop = document.getElementById(`line-${id}-desktop`);
+    const node = [mobile, desktop].find(
+      (el) => el && el.offsetParent !== null,
+    );
+    node?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [lines]);
 
   function patch(partial: Partial<PaySheet>) {
     onChange({ ...sheet, ...partial });
@@ -118,21 +134,29 @@ export function PaySheetForm({
     );
   }
 
-  function addLine(sameJob = false) {
-    const last = lines[lines.length - 1];
+  function addLine(sameJob = false, afterId?: string) {
     const date = weekdayDate(sheet.weekEnding, day);
-    setLines([
-      ...lines,
-      emptyJob(
-        sameJob && last
-          ? {
-              date: last.date || date,
-              customer: last.customer,
-              address: last.address,
-            }
-          : { date: last?.date || date },
-      ),
-    ]);
+    const source = afterId
+      ? lines.find((line) => line.id === afterId)
+      : lines[lines.length - 1];
+    const created = emptyJob(
+      sameJob && source
+        ? {
+            date: source.date || date,
+            customer: source.customer,
+            address: source.address,
+          }
+        : { date: source?.date || date },
+    );
+    focusLineId.current = created.id;
+    if (!afterId) {
+      setLines([...lines, created]);
+      return;
+    }
+    const index = lines.findIndex((line) => line.id === afterId);
+    const next = [...lines];
+    next.splice(index < 0 ? lines.length : index + 1, 0, created);
+    setLines(next);
   }
 
   function updateCode(index: number, partial: Partial<PieceCode>) {
@@ -313,7 +337,7 @@ export function PaySheetForm({
             </thead>
             <tbody>
               {lines.map((line) => (
-                <tr key={line.id} className="align-top">
+                <tr key={line.id} id={`line-${line.id}-desktop`} className="align-top">
                   <td className="w-32 py-1 pr-2">
                     <Input
                       type="date"
@@ -385,21 +409,33 @@ export function PaySheetForm({
                     />
                   </td>
                   <td className="py-1">
-                    <Button
-                      type="button"
-                      size="icon-sm"
-                      variant="ghost"
-                      aria-label="Remove line"
-                      onClick={() =>
-                        setLines(
-                          lines.length > 1
-                            ? lines.filter((item) => item.id !== line.id)
-                            : [emptyJob({ date: weekdayDate(sheet.weekEnding, day) })],
-                        )
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label="Same job, another code"
+                        title="Same job, another code"
+                        onClick={() => addLine(true, line.id)}
+                      >
+                        <CopyPlus />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label="Remove line"
+                        onClick={() =>
+                          setLines(
+                            lines.length > 1
+                              ? lines.filter((item) => item.id !== line.id)
+                              : [emptyJob({ date: weekdayDate(sheet.weekEnding, day) })],
+                          )
+                        }
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -411,9 +447,10 @@ export function PaySheetForm({
           {lines.map((line, index) => (
             <div
               key={line.id}
+              id={`line-${line.id}-mobile`}
               className="rounded-lg bg-muted/40 p-3 ring-1 ring-foreground/10"
             >
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Line {index + 1}
                 </p>
@@ -509,6 +546,16 @@ export function PaySheetForm({
                     }
                   />
                 </Field>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-11 w-full"
+                  onClick={() => addLine(true, line.id)}
+                >
+                  <CopyPlus />
+                  Same job, another code
+                </Button>
               </div>
             </div>
           ))}
