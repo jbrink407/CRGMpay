@@ -424,6 +424,16 @@ export function PaySheetForm({
                         type="button"
                         size="icon-sm"
                         variant="ghost"
+                        aria-label="Add line"
+                        title="Add line"
+                        onClick={() => addLine(false, line.id)}
+                      >
+                        <Plus />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
                         aria-label="Remove line"
                         onClick={() =>
                           setLines(
@@ -546,16 +556,28 @@ export function PaySheetForm({
                     }
                   />
                 </Field>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-11 w-full"
-                  onClick={() => addLine(true, line.id)}
-                >
-                  <CopyPlus />
-                  Same job, another code
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-auto min-h-11 min-w-0 whitespace-normal px-2 py-1.5 text-xs leading-tight"
+                    onClick={() => addLine(true, line.id)}
+                  >
+                    <CopyPlus />
+                    Same job, another code
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-auto min-h-11 min-w-0 whitespace-normal px-2 py-1.5 text-xs leading-tight"
+                    onClick={() => addLine(false, line.id)}
+                  >
+                    <Plus />
+                    Add line
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
