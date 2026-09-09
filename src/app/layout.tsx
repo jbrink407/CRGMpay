@@ -30,6 +30,12 @@ export const metadata: Metadata = {
   title: "CR Pay — Payroll detail log",
   description:
     "Fill the Construction Resources Glass & Mirror payroll detail log and print a landscape PDF that matches the company pay sheet.",
+  applicationName: "CR Pay",
+  appleWebApp: {
+    capable: true,
+    title: "CR Pay",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

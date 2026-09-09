@@ -271,7 +271,8 @@ export function PaySheetApp() {
   return (
     <div className="min-h-full min-w-0 overflow-x-clip bg-[#ece7de] text-[#1c1915]">
       <header className="app-chrome sticky top-0 z-20 border-b border-[#d7d0c4] bg-[#ece7de]/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-        <div className="mx-auto flex max-w-[1700px] flex-col gap-3 px-3 py-2 sm:px-4 sm:py-3 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-[1700px] flex-col gap-3 px-3 py-2 sm:px-4 sm:py-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <img
               src="/construction-resources-logo.png"
@@ -336,12 +337,8 @@ export function PaySheetApp() {
               onPick={handlePdf}
             />
           </div>
-        </div>
-      </header>
-
-      <div className="app-chrome mx-auto grid w-full min-w-0 max-w-[1700px] grid-cols-1 gap-4 px-3 py-3 pb-28 md:px-4 md:py-4 md:pb-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
-        <div className="min-w-0">
-          <div className="mb-3 grid w-full min-w-0 grid-cols-2 gap-1 rounded-lg bg-[#ddd6c8] p-1 xl:hidden">
+          </div>
+          <div className="grid w-full min-w-0 grid-cols-2 gap-1 rounded-lg bg-[#ddd6c8] p-1 xl:hidden">
             <Button
               type="button"
               size="sm"
@@ -361,7 +358,11 @@ export function PaySheetApp() {
               Preview
             </Button>
           </div>
+        </div>
+      </header>
 
+      <div className="app-chrome mx-auto grid w-full min-w-0 max-w-[1700px] grid-cols-1 gap-4 px-3 py-3 pb-28 md:px-4 md:py-4 md:pb-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,11in)]">
+        <div className="min-w-0">
           {error ? (
             <p className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}

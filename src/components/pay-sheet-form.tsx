@@ -157,13 +157,17 @@ export function PaySheetForm({
 
   return (
     <div className="flex min-w-0 flex-col gap-6 pb-24 lg:pb-8">
-      <section className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="font-heading text-sm font-medium">Header</h2>
-        <p className="mt-1 text-sm text-pretty text-muted-foreground">
-          Prints as INSTALLER / HELPER. Come back tomorrow — this week stays on
-          this device.
-        </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <CollapsedEditor
+        title="Header"
+        summary={
+          sheet.installerName.trim()
+            ? `${sheet.installerName.trim()}${
+                sheet.helperName.trim() ? ` / ${sheet.helperName.trim()}` : ""
+              } · week ending ${formatUSDate(sheet.weekEnding)}`
+            : "Installer, helper, and week ending — tap to edit"
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Installer">
             <Input
               value={sheet.installerName}
@@ -230,7 +234,7 @@ export function PaySheetForm({
             </div>
           </div>
         ) : null}
-      </section>
+      </CollapsedEditor>
 
       <section className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
         <div className="flex flex-col gap-3">

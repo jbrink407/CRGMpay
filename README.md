@@ -17,6 +17,9 @@ Add lines as work happens. Each week is saved on this device, so Monday’s jobs
 - **Download PDF** is a landscape letter PDF (`INSTALLER {name}.pdf`). Choose **This day** for the open day only (PAGE 1 OF 1) or **All days with work** for the week packet. Page numbers match that count.
 - Weekend tabs remind you of Chuck / Stacy same-day text rules
 - Job codes and builder names can be edited in collapsed lists (open to add, paste, or restore)
+- Header (installer, helper, week ending) collapses the same way
+- On a phone, Enter data / Preview stay at the top while you scroll
+- Add to Home Screen uses the Construction Resources logo as the shortcut and tab icon
 
 ## Run locally
 
