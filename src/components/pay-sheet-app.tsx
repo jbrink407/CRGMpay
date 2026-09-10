@@ -73,6 +73,8 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
+type SyncStatus = "idle" | "syncing" | "synced" | "error" | "signed-out";
+
 export function PaySheetApp() {
   const [sheet, setSheet] = useState<PaySheet>(() => createBlankSheet());
   const [codes, setCodes] = useState<PieceCode[]>(STARTER_CODES);
@@ -86,9 +88,7 @@ export function PaySheetApp() {
   const [weeks, setWeeks] = useState<WeekSummary[]>([]);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [syncStatus, setSyncStatus] = useState<
-    "idle" | "syncing" | "synced" | "error"
-  >("idle");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncTick, setSyncTick] = useState(0);
   const pageRefs = useRef<Partial<Record<Weekday, HTMLDivElement | null>>>({});
   const dayPdfRef = useRef<HTMLDivElement | null>(null);
@@ -139,11 +139,20 @@ export function PaySheetApp() {
     const userId = session?.user.id;
     if (!ready || !userId || !isCloudConfigured()) {
       if (!userId) {
-        setSyncStatus("idle");
+        const justSignedOut = Boolean(previousUserId.current);
         lastPushed.current = "";
         allowCloudPush.current = false;
         seenAuth.current = true;
         previousUserId.current = undefined;
+        if (justSignedOut) {
+          setSyncStatus("signed-out");
+          setError(null);
+          setNotice(
+            "Signed out. This week stays on this device and will not sync until you sign in again.",
+          );
+        } else {
+          setSyncStatus("idle");
+        }
       }
       return;
     }
@@ -587,7 +596,7 @@ function saveStatusLabel(
   ready: boolean,
   savedAt: number | null,
   session: Session | null,
-  syncStatus: "idle" | "syncing" | "synced" | "error",
+  syncStatus: SyncStatus,
 ): string {
   const time = savedAt
     ? new Date(savedAt).toLocaleTimeString([], {
@@ -604,6 +613,11 @@ function saveStatusLabel(
     return time
       ? `Saved on this device · ${time}`
       : "Saved on this device — cloud unreachable";
+  }
+  if (syncStatus === "signed-out") {
+    return time
+      ? `On this device only · not syncing · ${time}`
+      : "On this device only · not syncing";
   }
   return time
     ? `Saved on this device · ${time}`
