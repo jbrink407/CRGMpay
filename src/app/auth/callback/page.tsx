@@ -17,8 +17,8 @@ export default function AuthCallbackPage() {
           different app and will not see this login.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-[#6f675c]">
-          Close this tab, tap the CR Pay icon, and type the 6-digit code from
-          the email into Sign in. Keep that screen open while you copy the code.
+          Close this tab, tap the CR Pay icon, and type the code from the
+          email into Sign in. Keep that screen open while you copy the code.
         </p>
         <Link href="/" className={cn(buttonVariants(), "mt-4")}>
           Back to the sheet

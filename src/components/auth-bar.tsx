@@ -111,8 +111,8 @@ export function AuthBar({
     const supabase = getSupabase();
     if (!supabase) return;
     const trimmed = token.replace(/\s/g, "");
-    if (trimmed.length !== 6) {
-      setError("Enter the 6-digit code from the email.");
+    if (trimmed.length < 6 || trimmed.length > 8) {
+      setError("Enter the code from the email (6 or 8 digits).");
       return;
     }
     setBusy(true);
@@ -158,7 +158,7 @@ export function AuthBar({
                 create a free Supabase project, run <code>supabase/schema.sql</code>,
                 and set <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
                 <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> — details are in the
-                README. After a redeploy, this button emails a 6-digit code.
+                README. After a redeploy, this button emails a sign-in code.
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
@@ -221,7 +221,7 @@ export function AuthBar({
           <DialogHeader>
             <DialogTitle>Sign in to CR Pay</DialogTitle>
             <DialogDescription>
-              Use your work email. We send a 6-digit code — no password. Type
+              Use your work email. We send a sign-in code — no password. Type
               it here and stay in this app. Do not tap a login link in the
               email: that opens a separate browser, not the Home Screen
               shortcut.
@@ -253,25 +253,26 @@ export function AuthBar({
             </div>
             {sent ? (
               <div className="grid gap-1.5">
-                <Label htmlFor="crpay-otp">6-digit code</Label>
+                <Label htmlFor="crpay-otp">Code from email</Label>
                 <Input
                   id="crpay-otp"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={8}
+                  placeholder="00000000"
                   value={code}
                   onChange={(event) => {
-                    const next = event.target.value.replace(/\D/g, "").slice(0, 6);
+                    const next = event.target.value.replace(/\D/g, "").slice(0, 8);
                     setCode(next);
-                    if (next.length === 6) void verifyCode(next);
+                    if (next.length === 8) void verifyCode(next);
                   }}
                   disabled={busy}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Sent to {email}. Type the 6-digit code here. Ignore any
-                  Log in button in the mail — it will not sign in this app.
+                  Sent to {email}. Type the whole code here (8 digits on
+                  this project). Ignore any Log in button in the mail — it
+                  will not sign in this app.
                 </p>
               </div>
             ) : null}

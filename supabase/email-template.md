@@ -1,8 +1,8 @@
-# Sign-in email (6-digit code, no magic link)
+# Sign-in email (code only, no magic link)
 
 Supabase’s default mail is a **Log in** button. Tapping it on a phone opens Safari (or Chrome), not the Home Screen CR Pay icon — those two do not share a login.
 
-CR Pay signs in with the **6-digit code** typed in the app. Change the templates below so the email shows that code and does not include a login link.
+CR Pay signs in with the **code** typed in the app (6 or 8 digits, from Authentication → Settings → OTP length). Change the templates below so the email shows that code and does not include a login link.
 
 ## Confirm email (important)
 

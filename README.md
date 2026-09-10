@@ -41,7 +41,7 @@ No account required to fill a week. Drafts, saved weeks, job codes, and builders
 
 Sign-in is optional. Without it, CR Pay keeps working exactly as before — everything stays on that device.
 
-With a free [Supabase](https://supabase.com) project, **Sign in** emails a 6-digit code (no password). Type that code in the app — do not tap a login link, which opens a separate browser instead of the Home Screen shortcut. After you sign in, weeks, builders, and job codes follow the account.
+With a free [Supabase](https://supabase.com) project, **Sign in** emails a code (no password; 6 or 8 digits depending on the project). Type that code in the app — do not tap a login link, which opens a separate browser instead of the Home Screen shortcut. After you sign in, weeks, builders, and job codes follow the account.
 
 ### One-time setup
 
