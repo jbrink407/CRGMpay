@@ -2,6 +2,7 @@
 
 import { PaySheetDocument } from "@/components/pay-sheet-document";
 import { PaySheetForm } from "@/components/pay-sheet-form";
+import { AuthBar } from "@/components/auth-bar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -40,17 +41,27 @@ import {
 } from "@/lib/pay-sheet";
 import { downloadPagesPdf } from "@/lib/pdf";
 import {
+  applySnapshot,
   deleteWeek,
   listWeeks,
   loadCodes,
   loadCustomers,
   loadDraft,
+  loadSnapshot,
   openOrCreateWeek,
   saveCodes,
   saveCustomers,
   saveDraft,
+  snapshotCurrentSheet,
   type WeekSummary,
 } from "@/lib/storage";
+import {
+  cloudErrorMessage,
+  mergeSnapshots,
+  pullRemoteSnapshot,
+  pushRemoteSnapshot,
+} from "@/lib/sync";
+import { isCloudConfigured } from "@/lib/supabase";
 import { cn } from "cn";
 import {
   ChevronDown,
@@ -60,6 +71,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
 
 export function PaySheetApp() {
   const [sheet, setSheet] = useState<PaySheet>(() => createBlankSheet());
@@ -73,9 +85,24 @@ export function PaySheetApp() {
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [weeks, setWeeks] = useState<WeekSummary[]>([]);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "synced" | "error"
+  >("idle");
+  const [syncTick, setSyncTick] = useState(0);
   const pageRefs = useRef<Partial<Record<Weekday, HTMLDivElement | null>>>({});
   const dayPdfRef = useRef<HTMLDivElement | null>(null);
   const skipHydrate = useRef(false);
+  const sheetRef = useRef(sheet);
+  const codesRef = useRef(codes);
+  const customersRef = useRef(customers);
+  const lastPushed = useRef("");
+  const seenAuth = useRef(false);
+  const previousUserId = useRef<string | undefined>(undefined);
+  const allowCloudPush = useRef(false);
+  sheetRef.current = sheet;
+  codesRef.current = codes;
+  customersRef.current = customers;
 
   useEffect(() => {
     const draft = loadDraft();
@@ -106,7 +133,84 @@ export function PaySheetApp() {
       setSavedAt(Date.now());
     }, 250);
     return () => window.clearTimeout(handle);
-  }, [sheet, codes, customers, ready]);
+  }, [sheet, codes, customers, ready, syncTick]);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!ready || !userId || !isCloudConfigured()) {
+      if (!userId) {
+        setSyncStatus("idle");
+        lastPushed.current = "";
+        allowCloudPush.current = false;
+        seenAuth.current = true;
+        previousUserId.current = undefined;
+      }
+      return;
+    }
+    const justSignedIn = seenAuth.current && previousUserId.current !== userId;
+    seenAuth.current = true;
+    previousUserId.current = userId;
+    allowCloudPush.current = false;
+    let cancelled = false;
+    setSyncStatus("syncing");
+    void (async () => {
+      try {
+        const remote = await pullRemoteSnapshot(userId);
+        if (cancelled) return;
+        saveDraft(sheetRef.current);
+        saveCodes(codesRef.current);
+        saveCustomers(customersRef.current);
+        const local = loadSnapshot();
+        const merged = remote ? mergeSnapshots(local, remote) : local;
+        applySnapshot(merged);
+        await pushRemoteSnapshot(userId, merged);
+        if (cancelled) return;
+        lastPushed.current = JSON.stringify(merged);
+        allowCloudPush.current = true;
+        const nextSheet = snapshotCurrentSheet(merged) ?? createBlankSheet();
+        skipHydrate.current = true;
+        setCodes(merged.codes);
+        setCustomers(merged.customers);
+        setSheet(nextSheet);
+        setWeeks(listWeeks());
+        setSavedAt(Date.now());
+        setSyncStatus("synced");
+        if (justSignedIn) {
+          setNotice("Signed in. Weeks, builders, and job codes sync to this account.");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setSyncStatus("error");
+        setError(cloudErrorMessage(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, session?.user.id]);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!ready || !userId || !isCloudConfigured()) return;
+    const handle = window.setTimeout(() => {
+      if (!allowCloudPush.current) return;
+      const snapshot = loadSnapshot();
+      const json = JSON.stringify(snapshot);
+      if (json === lastPushed.current) return;
+      setSyncStatus((current) => (current === "error" ? current : "syncing"));
+      void pushRemoteSnapshot(userId, snapshot)
+        .then(() => {
+          lastPushed.current = json;
+          setSyncStatus("synced");
+          setSavedAt(Date.now());
+        })
+        .catch((err: unknown) => {
+          setSyncStatus("error");
+          setError(cloudErrorMessage(err));
+        });
+    }, 1600);
+    return () => window.clearTimeout(handle);
+  }, [sheet, codes, customers, ready, session?.user.id, syncTick]);
 
   function updateSheet(next: PaySheet) {
     skipHydrate.current = true;
@@ -206,6 +310,7 @@ export function PaySheetApp() {
       setDay("monday");
     }
     setWeeks(remaining);
+    setSyncTick((value) => value + 1);
     setError(null);
     setNotice(`Removed week ending ${label} from this device.`);
   }
@@ -289,15 +394,12 @@ export function PaySheetApp() {
                 Payroll detail log
               </h1>
               <p className="mt-0.5 hidden text-xs text-[#6f675c] min-[400px]:block">
-                {savedAt
-                  ? `Saved on this device · ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-                  : ready
-                    ? "Saves on this device as you type"
-                    : "Loading…"}
+                {saveStatusLabel(ready, savedAt, session, syncStatus)}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <AuthBar onSessionChange={setSession} />
             <Button
               type="button"
               variant="outline"
@@ -479,6 +581,33 @@ export function PaySheetApp() {
       </div>
     </div>
   );
+}
+
+function saveStatusLabel(
+  ready: boolean,
+  savedAt: number | null,
+  session: Session | null,
+  syncStatus: "idle" | "syncing" | "synced" | "error",
+): string {
+  const time = savedAt
+    ? new Date(savedAt).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
+  if (!ready) return "Loading…";
+  if (syncStatus === "syncing") return "Syncing…";
+  if (session && syncStatus === "synced") {
+    return time ? `Synced · ${time}` : "Synced to your account";
+  }
+  if (session && syncStatus === "error") {
+    return time
+      ? `Saved on this device · ${time}`
+      : "Saved on this device — cloud unreachable";
+  }
+  return time
+    ? `Saved on this device · ${time}`
+    : "Saves on this device as you type";
 }
 
 function PdfMenu({

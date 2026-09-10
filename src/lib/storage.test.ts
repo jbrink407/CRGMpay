@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createBlankSheet, ensureSheet } from "./pay-sheet";
 import {
+  applySnapshot,
   deleteWeek,
   listWeeks,
   loadDraft,
+  loadSnapshot,
+  saveCodes,
   saveDraft,
 } from "./storage";
 
@@ -83,4 +86,68 @@ test("deleteWeek of the last week clears current so a blank sheet can start", ()
   const remaining = deleteWeek(ending);
   assert.equal(remaining.length, 0);
   assert.equal(loadDraft(), null);
+});
+
+test("saveDraft does not bump updatedAt when the sheet is unchanged", () => {
+  installMemoryStorage();
+  saveDraft(ensureSheet({ weekEnding: "2026-09-06", installerName: "Joseph" }));
+  const first = loadSnapshot().weeks["2026-09-06"].updatedAt;
+  saveDraft(ensureSheet({ weekEnding: "2026-09-06", installerName: "Joseph" }));
+  assert.equal(loadSnapshot().weeks["2026-09-06"].updatedAt, first);
+});
+
+test("deleteWeek records a tombstone in the snapshot", () => {
+  installMemoryStorage();
+  saveDraft(ensureSheet({ weekEnding: "2026-09-06" }));
+  saveDraft(ensureSheet({ weekEnding: "2026-08-30" }));
+  deleteWeek("2026-08-30");
+  const snapshot = loadSnapshot();
+  assert.equal(snapshot.weeks["2026-08-30"], undefined);
+  assert.ok(snapshot.deletedWeeks["2026-08-30"]);
+});
+
+test("applySnapshot restores weeks, codes, and the open week", () => {
+  installMemoryStorage();
+  saveDraft(ensureSheet({ weekEnding: "2026-08-23", installerName: "Old" }));
+  applySnapshot({
+    version: 1,
+    weeks: {
+      "2026-09-06": {
+        sheet: ensureSheet({
+          weekEnding: "2026-09-06",
+          installerName: "Joseph Scott Kemper",
+        }),
+        updatedAt: 50,
+      },
+    },
+    currentWeekEnding: "2026-09-06",
+    codes: [
+      { id: "job-BHL", code: "BHL", description: "", unit: "ea", rate: 2 },
+    ],
+    customers: [{ id: "cust-Henderson", name: "Henderson" }],
+    codesUpdatedAt: 9,
+    customersUpdatedAt: 8,
+    deletedWeeks: { "2026-08-23": 12 },
+  });
+  assert.equal(loadDraft()?.installerName, "Joseph Scott Kemper");
+  assert.equal(loadSnapshot().codes[0].rate, 2);
+  assert.equal(loadSnapshot().deletedWeeks["2026-08-23"], 12);
+  assert.equal(listWeeks().map((week) => week.weekEnding).join(","), "2026-09-06");
+});
+
+test("saveCodes only stamps a new time when the list actually changes", () => {
+  installMemoryStorage();
+  saveCodes([
+    { id: "job-BHL", code: "BHL", description: "", unit: "ea", rate: 1.64 },
+  ]);
+  assert.equal(loadSnapshot().codesUpdatedAt, 0);
+  saveCodes([
+    { id: "job-BHL", code: "BHL", description: "", unit: "ea", rate: 2 },
+  ]);
+  const first = loadSnapshot().codesUpdatedAt;
+  assert.ok(first > 0);
+  saveCodes([
+    { id: "job-BHL", code: "BHL", description: "", unit: "ea", rate: 2 },
+  ]);
+  assert.equal(loadSnapshot().codesUpdatedAt, first);
 });
