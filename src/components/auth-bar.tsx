@@ -11,6 +11,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -184,12 +185,17 @@ export function AuthBar({
             <ChevronDown />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">
-            <DropdownMenuLabel className="font-normal">
-              Signed in. Weeks sync to this account.
-            </DropdownMenuLabel>
-            <DropdownMenuItem className="max-md:h-11" onClick={() => void signOut()}>
-              Sign out
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal">
+                Signed in. Weeks sync to this account.
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                className="max-md:h-11"
+                onClick={() => void signOut()}
+              >
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
