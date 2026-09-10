@@ -91,7 +91,9 @@ export function AuthBar({
       email: trimmed,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: window.location.origin,
+        // If a leftover magic-link template still has a button, land on a
+        // page that tells you to type the code in the Home Screen app.
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     setBusy(false);
@@ -219,9 +221,10 @@ export function AuthBar({
           <DialogHeader>
             <DialogTitle>Sign in to CR Pay</DialogTitle>
             <DialogDescription>
-              Use your work email. We send a 6-digit code — no password. After
-              that, weeks, builders, and job codes follow you on your phone and
-              laptop.
+              Use your work email. We send a 6-digit code — no password. Type
+              it here and stay in this app. Do not tap a login link in the
+              email: that opens a separate browser, not the Home Screen
+              shortcut.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -267,7 +270,8 @@ export function AuthBar({
                   disabled={busy}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Sent to {email}. You can also tap the link in that email.
+                  Sent to {email}. Type the 6-digit code here. Ignore any
+                  Log in button in the mail — it will not sign in this app.
                 </p>
               </div>
             ) : null}

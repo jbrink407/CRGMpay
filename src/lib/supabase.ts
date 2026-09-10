@@ -20,7 +20,9 @@ export function getSupabase(): SupabaseClient | null {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true,
+          // OTP is typed in the app. Magic-link clicks open Safari, not the
+          // Home Screen shortcut, so do not complete a session from the URL.
+          detectSessionInUrl: false,
         },
       },
     );

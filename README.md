@@ -41,17 +41,18 @@ No account required to fill a week. Drafts, saved weeks, job codes, and builders
 
 Sign-in is optional. Without it, CR Pay keeps working exactly as before — everything stays on that device.
 
-With a free [Supabase](https://supabase.com) project, **Sign in** emails a 6-digit code (no password). After that, weeks, builders, and job codes follow the account. Sign out leaves the copy on this device; it just stops updating the cloud.
+With a free [Supabase](https://supabase.com) project, **Sign in** emails a 6-digit code (no password). Type that code in the app — do not tap a login link, which opens a separate browser instead of the Home Screen shortcut. After you sign in, weeks, builders, and job codes follow the account.
 
 ### One-time setup
 
 1. Create a Supabase project.
 2. Paste `supabase/schema.sql` into **SQL → New query** and run it. That creates `pay_state` with row-level security so each login only reads its own row.
-3. **Authentication → Providers → Email**: leave email enabled. Turn on the email OTP / magic-link templates if they are off.
-4. **Authentication → URL configuration**: Site URL `https://crgmpay.onrender.com`. Redirect URLs should include that origin and `http://127.0.0.1:43180/**` for local work.
-5. Copy **Project URL** and the **anon** public key (Project Settings → API). Never put the service-role key in this app.
-6. Local: copy `.env.example` to `.env.local` and fill both `NEXT_PUBLIC_…` values, then restart `npm run dev`.
-7. Render: set the same two keys on the `crgm-pay` service, then redeploy. Next.js inlines `NEXT_PUBLIC_` values at **build** time, so changing them requires a new deploy.
+3. **Authentication → Providers → Email**: leave email enabled. Turn **Confirm email** **off** so the first sign-in sends a code, not only a confirmation link.
+4. Replace the **Magic link** email template with the code-only HTML in `supabase/email-template.md`. The default mail is a Log in button; tapping it on a phone opens Safari instead of the Home Screen app.
+5. **Authentication → URL configuration**: Site URL `https://crgmpay.onrender.com`. Redirect URLs should include `https://crgmpay.onrender.com/**`, `https://crgmpay.onrender.com/auth/callback`, and `http://127.0.0.1:43180/**` for local work.
+6. Copy **Project URL** and the **anon** public key (Project Settings → API). Never put the service-role key in this app.
+7. Local: copy `.env.example` to `.env.local` and fill both `NEXT_PUBLIC_…` values, then restart `npm run dev`.
+8. Render: set the same two keys on the `crgm-pay` service, then redeploy. Next.js inlines `NEXT_PUBLIC_` values at **build** time, so changing them requires a new deploy.
 
 Until those keys exist, **Sign in** explains the setup and the sheet keeps saving on this device.
 
