@@ -11,7 +11,6 @@ import {
 } from "./customers";
 import {
   WEEKDAYS,
-  emptyJob,
   ensureSheet,
   jobHasContent,
   newId,
@@ -59,14 +58,6 @@ function mergeDayLines(newer: JobLine[], older: JobLine[]): JobLine[] {
 
   for (const line of newer) add(line);
   for (const line of older) add(line);
-
-  const date =
-    newer.find((line) => line.date)?.date ||
-    older.find((line) => line.date)?.date ||
-    "";
-  while (result.length < 4) {
-    result.push(emptyJob({ date }));
-  }
   return result;
 }
 

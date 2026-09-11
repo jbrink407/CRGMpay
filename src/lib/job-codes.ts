@@ -17,7 +17,7 @@ export function ensureCodeIds(
   codes: Array<Partial<PieceCode> & { code?: string }>,
 ): PieceCode[] {
   const seen = new Set<string>();
-  return codes.map((item, index) => {
+  const mapped = codes.map((item, index) => {
     const code = String(item.code || "").toUpperCase();
     const base: PieceCode = {
       id: "",
@@ -36,6 +36,21 @@ export function ensureCodeIds(
     while (seen.has(id)) id = `${fromCode}-${n++}`;
     seen.add(id);
     return { ...base, id };
+  });
+  return sortCodes(mapped);
+}
+
+export function sortCodes(codes: PieceCode[]): PieceCode[] {
+  return [...codes].sort((a, b) => {
+    const left = a.code.trim();
+    const right = b.code.trim();
+    if (!left && !right) return 0;
+    if (!left) return 1;
+    if (!right) return -1;
+    return left.localeCompare(right, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
   });
 }
 
@@ -152,7 +167,7 @@ export function parseCodeCsv(text: string): PieceCode[] {
       rate: asRate || 0,
     });
   }
-  return codes;
+  return sortCodes(codes);
 }
 
 export function codesToCsv(codes: PieceCode[]): string {

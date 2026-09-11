@@ -108,7 +108,7 @@ export function emptyJob(partial: Partial<JobLine> = {}): JobLine {
   };
 }
 
-export function emptyDay(count = 4, date = "", key = ""): JobLine[] {
+export function emptyDay(count = 1, date = "", key = ""): JobLine[] {
   const prefix = key || date || "row";
   return Array.from({ length: count }, (_, index) =>
     emptyJob({ id: `${prefix}-${index}`, date }),
@@ -296,6 +296,28 @@ export function lastWorkedDay(sheet: PaySheet): Weekday {
   return "sunday";
 }
 
+export function padDayLines(
+  rows: JobLine[] | undefined,
+  date: string,
+  day: Weekday,
+): JobLine[] {
+  if (!rows?.length) return emptyDay(1, date, day);
+  let lastContent = -1;
+  for (let index = 0; index < rows.length; index += 1) {
+    if (jobHasContent(rows[index])) lastContent = index;
+  }
+  if (lastContent < 0) {
+    const first = rows[0];
+    return [
+      emptyJob({
+        id: first.id || `${day}-0`,
+        date: first.date || date,
+      }),
+    ];
+  }
+  return rows.slice(0, lastContent + 1);
+}
+
 export function ensureSheet(partial: Partial<PaySheet> | null | undefined): PaySheet {
   const blank = createBlankSheet();
   const weekEnding = sundayOfWeek(
@@ -304,9 +326,7 @@ export function ensureSheet(partial: Partial<PaySheet> | null | undefined): PayS
   const days = { ...blank.days };
   for (const day of WEEKDAYS) {
     const rows = partial?.days?.[day];
-    days[day] = rows?.length
-      ? rows
-      : emptyDay(4, weekdayDate(weekEnding, day), day);
+    days[day] = padDayLines(rows, weekdayDate(weekEnding, day), day);
   }
   return {
     installerName: partial?.installerName ?? "",
@@ -335,7 +355,7 @@ export function createBlankSheet(): PaySheet {
   const weekEnding = lastSunday();
   const days = {} as Record<Weekday, JobLine[]>;
   for (const day of WEEKDAYS) {
-    days[day] = emptyDay(4, weekdayDate(weekEnding, day), day);
+    days[day] = emptyDay(1, weekdayDate(weekEnding, day), day);
   }
   return {
     installerName: "",

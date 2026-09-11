@@ -14,15 +14,12 @@ import { STARTER_CODES, ensureCodeIds, type PieceCode } from "@/lib/job-codes";
 import {
   STARTER_CUSTOMERS,
   ensureCustomerIds,
-  rememberCustomer,
   type Customer,
 } from "@/lib/customers";
 import {
   WEEKDAYS,
   WEEKDAY_LABELS,
   createBlankSheet,
-  createSampleSheet,
-  formatMoney,
   formatUSDate,
   lastWorkedDay,
   nextSunday,
@@ -34,7 +31,6 @@ import {
   sheetHasWork,
   toISODate,
   weekdayFromIso,
-  weeklyTotal,
   type PaySheet,
   type PacketScope,
   type Weekday,
@@ -66,7 +62,6 @@ import { cn } from "cn";
 import {
   ChevronDown,
   Download,
-  FileSpreadsheet,
   Printer,
   RotateCcw,
 } from "lucide-react";
@@ -248,25 +243,6 @@ export function PaySheetApp() {
     );
   }
 
-  function handleSample() {
-    skipHydrate.current = true;
-    setCodes(STARTER_CODES);
-    const sample = createSampleSheet(STARTER_CODES);
-    setCustomers((current) =>
-      ["Henderson", "Westfield Apts", "St. Marks"].reduce(
-        (list, name) => rememberCustomer(list, name),
-        current,
-      ),
-    );
-    setSheet(sample);
-    setDay("monday");
-    setError(null);
-    setNotice(
-      `Loaded sample for ${sample.installerName} / helper ${sample.helperName}. Weekly total ${formatMoney(weeklyTotal(sample))}.`,
-    );
-    setTab("preview");
-  }
-
   function handleWeekEnding(raw: string) {
     if (!raw) return;
     const ending = sundayOfWeek(raw);
@@ -418,16 +394,6 @@ export function PaySheetApp() {
             >
               <RotateCcw />
               New week
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="max-md:h-11 max-md:flex-1"
-              onClick={handleSample}
-              disabled={!ready}
-            >
-              <FileSpreadsheet />
-              Load sample
             </Button>
             <Button
               type="button"

@@ -78,12 +78,12 @@ Free/starter instances can sleep after idle time; the first request after sleep 
 4. Close the laptop and come back later — the week is still there. Sign in if you also want it on your phone.
 5. Download PDF or print when the week is done. Download PDF asks whether you want this day only or every day with work.
 
-**New week** saves the current week and opens the next Sunday. Saved weeks appear as chips under the week-ending date — open one to continue, or trash it to remove it from this device (with confirmation). **Load sample** fills Joseph Scott Kemper / Joshua Brinker, including a Saturday line.
+**New week** saves the current week and opens the next Sunday. Saved weeks appear as chips under the week-ending date — open one to continue, or trash it to remove it from this device (with confirmation).
 
 ## Builders
 
-Customer on each line is a dropdown of the company builder list (Adams Homes, D.R. Horton, Lennar Atlanta, and the rest). Pick one, or choose **Type a name…** for a builder that is not on the list. Typed names are remembered on this device. Open **Builders** to add, remove, or paste a list.
+Customer on each line is a dropdown of the company builder list (Adams Homes, D.R. Horton, Lennar Atlanta, and the rest), A–Z. Pick one, or choose **Type a name…** for a builder that is not on the list. Typed names are remembered and sorted into the list. Open **Builders** to add, remove, or paste a list.
 
 ## Job codes
 
-The starter list is the Job Codes tab from the company workbook (BHL, BORE, REKEY, FD791LAB, and the rest). Open **Job codes** to edit rates or paste an updated list.
+The starter list is the Job Codes tab from the company workbook (BHL, BORE, REKEY, FD791LAB, and the rest). Dropdowns stay A–Z after you add or paste codes. Open **Job codes** to edit rates or paste an updated list.

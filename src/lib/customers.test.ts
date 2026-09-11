@@ -25,7 +25,7 @@ test("saved Other / Custom Builder rows are dropped in favor of Type a name", ()
   ]);
   assert.deepEqual(
     loaded.map((item) => item.name),
-    ["Pulte Homes", "Lennar Atlanta"],
+    ["Lennar Atlanta", "Pulte Homes"],
   );
   assert.equal(rememberCustomer(loaded, OTHER_CUSTOMER), loaded);
   assert.equal(parseCustomerList(`${OTHER_CUSTOMER}\nPulte Homes`).length, 1);
@@ -37,6 +37,11 @@ test("rememberCustomer adds a typed name once", () => {
   assert.ok(findCustomer(once, "New Builder Co"));
   const twice = rememberCustomer(once, "new builder co");
   assert.equal(twice.length, once.length);
+  const names = once.map((item) => item.name);
+  assert.deepEqual(
+    [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    names,
+  );
 });
 
 test("paste builder names one per line", () => {

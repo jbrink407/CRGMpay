@@ -69,20 +69,33 @@ export function ensureCustomerIds(
   customers: Array<Partial<Customer> & { name?: string }>,
 ): Customer[] {
   const seen = new Set<string>();
-  return customers
-    .filter((item) => !isPlaceholderBuilder(String(item.name || "")))
-    .map((item, index) => {
-    const name = String(item.name || "").trim();
-    if (item.id && !seen.has(item.id)) {
-      seen.add(item.id);
-      return { id: item.id, name };
-    }
-    const fromName = name ? `cust-${name}` : `cust-new-${index}`;
-    let id = fromName;
-    let n = 2;
-    while (seen.has(id)) id = `${fromName}-${n++}`;
-    seen.add(id);
-    return { id, name };
+  return sortCustomers(
+    customers
+      .filter((item) => !isPlaceholderBuilder(String(item.name || "")))
+      .map((item, index) => {
+        const name = String(item.name || "").trim();
+        if (item.id && !seen.has(item.id)) {
+          seen.add(item.id);
+          return { id: item.id, name };
+        }
+        const fromName = name ? `cust-${name}` : `cust-new-${index}`;
+        let id = fromName;
+        let n = 2;
+        while (seen.has(id)) id = `${fromName}-${n++}`;
+        seen.add(id);
+        return { id, name };
+      }),
+  );
+}
+
+export function sortCustomers(customers: Customer[]): Customer[] {
+  return [...customers].sort((a, b) => {
+    const left = a.name.trim();
+    const right = b.name.trim();
+    if (!left && !right) return 0;
+    if (!left) return 1;
+    if (!right) return -1;
+    return left.localeCompare(right, undefined, { sensitivity: "base" });
   });
 }
 
@@ -103,7 +116,7 @@ export function rememberCustomer(
   const trimmed = name.trim();
   if (!trimmed || isPlaceholderBuilder(trimmed)) return customers;
   if (findCustomer(customers, trimmed)) return customers;
-  return [...customers, emptyCustomer({ name: trimmed })];
+  return sortCustomers([...customers, emptyCustomer({ name: trimmed })]);
 }
 
 export function parseCustomerList(text: string): Customer[] {
@@ -116,5 +129,5 @@ export function parseCustomerList(text: string): Customer[] {
     if (isPlaceholderBuilder(name) || findCustomer(unique, name)) continue;
     unique.push(emptyCustomer({ name }));
   }
-  return unique;
+  return sortCustomers(unique);
 }

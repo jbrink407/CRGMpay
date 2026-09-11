@@ -35,6 +35,14 @@ test("saved codes without ids get stable ids that survive code edits", () => {
   assert.equal(loaded[0].id, "job-BHL");
   const edited = ensureCodeIds([{ ...loaded[0], code: "BHLX" }]);
   assert.equal(edited[0].id, "job-BHL");
+  const sorted = ensureCodeIds([
+    { id: "job-REKEY", code: "REKEY", rate: 20.5 },
+    { id: "job-BHL", code: "BHL", rate: 1.64 },
+  ]);
+  assert.deepEqual(
+    sorted.map((item) => item.code),
+    ["BHL", "REKEY"],
+  );
 });
 
 test("company codes match the Job Codes tab", () => {
@@ -95,6 +103,7 @@ test("blank weekday rows use stable ids", () => {
   const second = createBlankSheet();
   assert.equal(first.days.monday[0].id, second.days.monday[0].id);
   assert.equal(first.days.monday[0].id, "monday-0");
+  assert.equal(first.days.monday.length, 1);
   assert.ok(first.days.sunday);
   assert.ok(first.days.saturday);
 });
@@ -112,6 +121,49 @@ test("older drafts without weekend days still load", () => {
   assert.equal(sheet.days.saturday[0].date, "2026-09-05");
   assert.equal(sheet.days.sunday[0].date, "2026-09-06");
   assert.equal(sheet.weekEnding, "2026-09-06");
+});
+
+test("ensureSheet keeps one blank line on an empty day and drops leftover blanks", () => {
+  const sheet = ensureSheet({
+    weekEnding: "2026-09-06",
+    days: {
+      monday: [
+        {
+          id: "monday-0",
+          date: "2026-08-31",
+          customer: "Henderson",
+          address: "214 Oak",
+          code: "BORE",
+          qty: 1,
+          rate: 10.25,
+          comments: "",
+        },
+        {
+          id: "monday-1",
+          date: "2026-08-31",
+          customer: "",
+          address: "",
+          code: "",
+          qty: 0,
+          rate: 0,
+          comments: "",
+        },
+        {
+          id: "monday-2",
+          date: "2026-08-31",
+          customer: "",
+          address: "",
+          code: "",
+          qty: 0,
+          rate: 0,
+          comments: "",
+        },
+      ],
+    } as never,
+  });
+  assert.equal(sheet.days.monday.length, 1);
+  assert.equal(sheet.days.monday[0].customer, "Henderson");
+  assert.equal(sheet.days.thursday.length, 1);
 });
 
 test("sunday of week and next sunday", () => {

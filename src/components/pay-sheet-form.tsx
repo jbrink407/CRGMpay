@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   emptyCode,
   parseCodeCsv,
+  sortCodes,
   STARTER_CODES,
   type PieceCode,
 } from "@/lib/job-codes";
@@ -16,6 +17,7 @@ import {
   findCustomer,
   parseCustomerList,
   rememberCustomer,
+  sortCustomers,
   type Customer,
 } from "@/lib/customers";
 import {
@@ -261,35 +263,12 @@ export function PaySheetForm({
       </CollapsedEditor>
 
       <section className="min-w-0 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <div className="flex flex-col gap-3">
-          <div className="min-w-0">
-            <h2 className="font-heading text-sm font-medium">Piece work</h2>
-            <p className="mt-1 text-sm text-pretty text-muted-foreground">
-              One page per day, Monday through Sunday. Fill a few lines
-              now and the rest later — nothing is lost when you close the tab.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="max-md:h-11"
-              onClick={() => addLine(true)}
-            >
-              Same job, another code
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="max-md:h-11"
-              onClick={() => addLine(false)}
-            >
-              <Plus />
-              Add line
-            </Button>
-          </div>
+        <div className="min-w-0">
+          <h2 className="font-heading text-sm font-medium">Piece work</h2>
+          <p className="mt-1 text-sm text-pretty text-muted-foreground">
+            One page per day, Monday through Sunday. Fill a few lines now
+            and the rest later — nothing is lost when you close the tab.
+          </p>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -377,7 +356,7 @@ export function PaySheetForm({
                       !codes.some((item) => item.code === line.code) ? (
                         <option value={line.code}>{line.code}</option>
                       ) : null}
-                      {codes.map((item) => (
+                      {sortCodes(codes).map((item) => (
                         <option key={item.code} value={item.code}>
                           {item.code} · {formatMoney(item.rate)}
                         </option>
@@ -503,7 +482,7 @@ export function PaySheetForm({
                     !codes.some((item) => item.code === line.code) ? (
                       <option value={line.code}>{line.code}</option>
                     ) : null}
-                    {codes.map((item) => (
+                    {sortCodes(codes).map((item) => (
                       <option key={item.code} value={item.code}>
                         {item.code} · {formatMoney(item.rate)}
                       </option>
@@ -582,6 +561,16 @@ export function PaySheetForm({
             </div>
           ))}
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 max-md:h-11 w-full sm:w-auto"
+          onClick={() => addLine(false)}
+        >
+          <Plus />
+          Add line
+        </Button>
       </section>
 
       <CollapsedEditor
@@ -647,7 +636,7 @@ export function PaySheetForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => onCustomersChange(STARTER_CUSTOMERS)}
+            onClick={() => onCustomersChange(sortCustomers(STARTER_CUSTOMERS))}
           >
             Restore company list
           </Button>
@@ -752,7 +741,7 @@ export function PaySheetForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => onCodesChange(STARTER_CODES)}
+            onClick={() => onCodesChange(sortCodes(STARTER_CODES))}
           >
             Restore company list
           </Button>
@@ -864,7 +853,7 @@ function CustomerPicker({
         }}
       >
         <option value="">Customer</option>
-        {customers.map((item) =>
+        {sortCustomers(customers).map((item) =>
           item.name ? (
             <option key={item.id} value={item.name}>
               {item.name}
